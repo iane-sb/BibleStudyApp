@@ -1,0 +1,31 @@
+{
+  "translation": "KJV",
+  "bookCode": "JHN",
+  "bookName": "John",
+  "testament": "NT",
+  "chapters": {
+    "1": [
+      { "v": 1, "t": "In the beginning was the Word, and the Word was with God, and the Word was God." },
+      { "v": 2, "t": "The same was in the beginning with God." },
+      { "v": 3, "t": "All things were made by him; and without him was not any thing made that was made." },
+      { "v": 4, "t": "In him was life; and the life was the light of men." },
+      { "v": 5, "t": "And the light shineth in darkness; and the darkness comprehended it not." },
+      { "v": 6, "t": "There was a man sent from God, whose name was John." },
+      { "v": 7, "t": "The same came for a witness, to bear witness of the Light, that all men through him might believe." },
+      { "v": 8, "t": "He was not that Light, but was sent to bear witness of that Light." },
+      { "v": 9, "t": "That was the true Light, which lighteth every man that cometh into the world." },
+      { "v": 10, "t": "He was in the world, and the world was made by him, and the world knew him not." },
+      { "v": 11, "t": "He came unto his own, and his own received him not." },
+      { "v": 12, "t": "But as many as received him, to them gave he power to become the sons of God, even to them that believe on his name:" },
+      { "v": 13, "t": "Which were born, not of blood, nor of the will of the flesh, nor of the will of man, but of God." },
+      { "v": 14, "t": "And the Word was made flesh, and dwelt among us, (and we beheld his glory, the glory as of the only begotten of the Father,) full of grace and truth." }
+    ],
+    "2": [
+      { "v": 1, "t": "And the third day there was a marriage in Cana of Galilee; and the mother of Jesus was there:" },
+      { "v": 2, "t": "And both Jesus was called, and his disciples, to the marriage." },
+      { "v": 3, "t": "And when they wanted wine, the mother of Jesus saith unto him, They have no wine." },
+      { "v": 4, "t": "Jesus saith unto her, Woman, what have I to do with thee? mine hour is not yet come." },
+      { "v": 5, "t": "His mother saith unto the servants, Whatsoever he saith unto you, do it." }
+    ]
+  }
+}

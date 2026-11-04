@@ -1,0 +1,31 @@
+{
+  "translation": "RCPV",
+  "bookCode": "JHN",
+  "bookName": "Juan",
+  "testament": "NT",
+  "chapters": {
+    "1": [
+      { "v": 1, "t": "Sa sinugdan diha na ang Pulong, ug ang Pulong uban sa Dios, ug ang Pulong Dios." },
+      { "v": 2, "t": "Sukad pa gayod sa sinugdan ang Pulong uban na sa Dios." },
+      { "v": 3, "t": "Pinaagi kaniya gibuhat sa Dios ang tanang mga butang ug walay bisan usa sa mga nabuhat nga nahimo nga dili pinaagi kaniya." },
+      { "v": 4, "t": "Diha kaniya ang kinabuhi ug ang maong kinabuhi mao ang kahayag alang sa mga tawo." },
+      { "v": 5, "t": "Ang kahayag misidlak diha sa kangitngit ug ang kangitngit wala gayod makabuntog niini." },
+      { "v": 6, "t": "Dihay usa ka tawo nga gipadala sa Dios kansang ngalan mao si Juan." },
+      { "v": 7, "t": "Mianhi siya aron pagsaksi sa kahayag aron ang tanan motuo pinaagi kaniya." },
+      { "v": 8, "t": "Dili siya ang kahayag apan mianhi siya aron pagsaksi sa maong kahayag." },
+      { "v": 9, "t": "Kini mao ang matuod nga kahayag nga mianhi sa kalibotan ug naglamdag sa tanang mga tawo." },
+      { "v": 10, "t": "Ang Pulong diha na sa kalibotan, ug bisan tuod ang kalibotan gibuhat pinaagi kaniya, ang kalibotan wala moila kaniya." },
+      { "v": 11, "t": "Mianhi siya sa iyang kaugalingong katawhan, apan ang iyang katawhan wala modawat kaniya." },
+      { "v": 12, "t": "Apan kadtong tanan nga midawat kaniya ug misalig kaniya, gihatagan niya sa katungod nga mahimong mga anak sa Dios." },
+      { "v": 13, "t": "Sila nahimong mga anak sa Dios dili tungod sa tawhanong pagkahimugso kondili tungod sa kabubut-on sa Dios." },
+      { "v": 14, "t": "Ang Pulong nahimong tawo ug mipuyo uban kanato, puno sa grasya ug kamatuoran. Nakita namo ang iyang himaya, ang himaya nga iyang nadawat ingon nga bugtong Anak sa Amahan." }
+    ],
+    "2": [
+      { "v": 1, "t": "Paglabay sa duha ka adlaw, dihay kasal sa lungsod sa Cana sa Galilea, ug didto ang inahan ni Jesus." },
+      { "v": 2, "t": "Gidapit usab sa kasal si Jesus ug ang iyang mga tinun-an." },
+      { "v": 3, "t": "Sa pagkahurot sa bino, ang inahan ni Jesus miingon kaniya, \"Wala na silay bino.\"" },
+      { "v": 4, "t": "Si Jesus mitubag, \"Babaye, ayaw akog hilabti. Wala pa moabot ang akong panahon.\"" },
+      { "v": 5, "t": "Ang iyang inahan miingon sa mga sulugoon, \"Buhata ninyo ang bisan unsa nga isugo niya kaninyo.\"" }
+    ]
+  }
+}

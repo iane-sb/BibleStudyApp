@@ -33,9 +33,9 @@ const dateLabel = today.toLocaleDateString('en-US', {
 function getGreeting() {
   const hour = today.getHours();
 
-  if (hour < 12) return 'Good morning';
-  if (hour < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return 'Maayong buntag';
+  if (hour < 18) return 'Maayong hapon';
+  return 'Maayong gabii';
 }
 
 function SectionHeader({
@@ -72,13 +72,13 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View>
             <Text style={styles.brand}>
-              ✦ WORD & WISDOM
+              ✦ BALAANONG PULONG
             </Text>
             <Text style={styles.greeting}>
               {getGreeting()} 👋
             </Text>
             <Text style={styles.headerSubtitle}>
-              Make room for God's Word today.
+              Hatagi og luna ang Pulong sa Diyos karong adlawa.
             </Text>
           </View>
 
@@ -102,13 +102,11 @@ export default function HomeScreen() {
           <Text style={styles.quoteMark}>“</Text>
 
           <Text style={styles.verseText}>
-            I am the vine, ye are the branches: He that
-            abideth in me, and I in him, the same bringeth
-            forth much fruit.
+            Ako mao ang punoan sa paras, kamo mao ang mga sanga. Ang nagpabilin kanako ug ako kaniya, mamunga siya ug daghan; kay kon bulag kamo kanako, wala kamoy mahimo.
           </Text>
 
           <Text style={styles.verseReference}>
-            JOHN 15:5 · KJV
+            JUAN 15:5 · RCPV
           </Text>
 
           <View style={styles.verseDivider} />
@@ -123,7 +121,7 @@ export default function HomeScreen() {
               onPress={() => router.push('/bible')}
             >
               <Text style={styles.readButtonText}>
-                Read Bible  →
+                Basa sa Biblia  →
               </Text>
             </Pressable>
           </View>
@@ -131,8 +129,8 @@ export default function HomeScreen() {
 
         {/* CONTINUE READING */}
         <SectionHeader
-          title="Continue Reading"
-          action="Open Bible  →"
+          title="Tiwasa ug Basa"
+          action="Ablihi ang Biblia  →"
           onPress={() => router.push('/bible')}
         />
 

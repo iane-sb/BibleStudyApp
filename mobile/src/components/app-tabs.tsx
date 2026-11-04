@@ -1,6 +1,9 @@
 
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import type { ComponentProps } from 'react';
+
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 const COLORS = {
   background: '#10131D',
@@ -9,12 +12,12 @@ const COLORS = {
   border: '#292D39',
 };
 
-const tabIcons: Record<string, string> = {
-  index: '⌂',
-  bible: '▤',
-  plans: '◷',
-  journal: '✎',
-  profile: '◉',
+const tabIcons: Record<string, { active: IoniconName; inactive: IoniconName }> = {
+  index: { active: 'home', inactive: 'home-outline' },
+  bible: { active: 'book', inactive: 'book-outline' },
+  plans: { active: 'calendar', inactive: 'calendar-outline' },
+  journal: { active: 'create', inactive: 'create-outline' },
+  profile: { active: 'person', inactive: 'person-outline' },
 };
 
 export default function AppTabs() {
@@ -29,20 +32,20 @@ export default function AppTabs() {
           backgroundColor: COLORS.background,
           borderTopColor: COLORS.border,
           borderTopWidth: 1,
-          height: 68,
-          paddingTop: 7,
-          paddingBottom: 7,
+          height: 64,
+          paddingTop: 6,
+          paddingBottom: 8,
           elevation: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: '600',
         },
-        tabBarIcon: ({ color }) => (
-          <Text style={{ color, fontSize: 28 }}>
-            {tabIcons[route.name] ?? '•'}
-          </Text>
-        ),
+        tabBarIcon: ({ color, focused }) => {
+          const icons = tabIcons[route.name];
+          const iconName = icons ? (focused ? icons.active : icons.inactive) : 'ellipse-outline';
+          return <Ionicons name={iconName} size={24} color={color as string} />;
+        },
       })}
     >
       <Tabs.Screen name="index" options={{ title: 'Home' }} />
