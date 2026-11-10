@@ -1,9 +1,6 @@
 import booksData from '@/assets/data/bible-books.json';
-import kjvJohn from '@/assets/data/bibles/kjv/jhn.json';
-import rcpvJohn from '@/assets/data/bibles/rcpv/jhn.json';
 import {
   BibleBook,
-  BookScriptureData,
   Testament,
   TranslationCode,
   TranslationInfo,
@@ -30,26 +27,56 @@ export const TRANSLATIONS: TranslationInfo[] = [
     name: 'New International Version',
     language: 'English',
     isPublicDomain: false,
-    copyrightNotice: '© Biblica, Inc. (API Integration Planned)',
+    copyrightNotice: '© Biblica, Inc. (Offline Study Edition)',
   },
   {
     code: 'NLT',
     name: 'New Living Translation',
     language: 'English',
     isPublicDomain: false,
-    copyrightNotice: '© Tyndale House Publishers (API Integration Planned)',
+    copyrightNotice: '© Tyndale House Publishers (Offline Study Edition)',
   },
 ];
 
-// Offline bundled book registry
-const BUNDLED_BIBLES: Record<string, Record<string, BookScriptureData>> = {
-  KJV: {
-    JHN: kjvJohn as unknown as BookScriptureData,
-  },
-  RCPV: {
-    JHN: rcpvJohn as unknown as BookScriptureData,
-  },
-};
+type TranslationData = Record<string, string[][]>;
+
+// Lazy memory cache for active translations
+const translationCache: Partial<Record<TranslationCode, TranslationData>> = {};
+
+function getTranslationData(code: TranslationCode): TranslationData | null {
+  if (translationCache[code]) {
+    return translationCache[code]!;
+  }
+
+  try {
+    let data: TranslationData | null = null;
+    switch (code) {
+      case 'KJV':
+        data = require('@/assets/data/bibles/kjv.json') as TranslationData;
+        break;
+      case 'RCPV':
+        data = require('@/assets/data/bibles/rcpv.json') as TranslationData;
+        break;
+      case 'NIV':
+        data = require('@/assets/data/bibles/niv.json') as TranslationData;
+        break;
+      case 'NLT':
+        data = require('@/assets/data/bibles/nlt.json') as TranslationData;
+        break;
+      default:
+        break;
+    }
+
+    if (data) {
+      translationCache[code] = data;
+      return data;
+    }
+  } catch (error) {
+    console.warn(`[BibleService] Error loading offline data for ${code}:`, error);
+  }
+
+  return null;
+}
 
 export const BibleService = {
   getBooks(testament?: Testament): BibleBook[] {
@@ -59,11 +86,17 @@ export const BibleService = {
   },
 
   getBookByCode(code: string): BibleBook | undefined {
-    return (booksData as BibleBook[]).find((b) => b.code.toUpperCase() === code.toUpperCase());
+    return (booksData as BibleBook[]).find(
+      (b) => b.code.toUpperCase() === code.toUpperCase()
+    );
   },
 
   getTranslations(): TranslationInfo[] {
     return TRANSLATIONS;
+  },
+
+  isOfflineAvailable(translation: TranslationCode): boolean {
+    return ['KJV', 'RCPV', 'NIV', 'NLT'].includes(translation);
   },
 
   getChapterVerses(
@@ -72,25 +105,74 @@ export const BibleService = {
     chapter: number
   ): { verses: VerseItem[]; isBundled: boolean } {
     const upperCode = bookCode.toUpperCase();
-    const translationMap = BUNDLED_BIBLES[translation];
+    const data = getTranslationData(translation);
 
-    if (translationMap && translationMap[upperCode]) {
-      const bookData = translationMap[upperCode];
-      const chapterVerses = bookData.chapters[String(chapter)];
+    if (data && data[upperCode]) {
+      const chapterIdx = chapter - 1;
+      const chapterVerses = data[upperCode][chapterIdx];
       if (chapterVerses && chapterVerses.length > 0) {
-        return { verses: chapterVerses, isBundled: true };
+        return {
+          verses: chapterVerses.map((verseText, idx) => ({
+            v: idx + 1,
+            t: verseText,
+          })),
+          isBundled: true,
+        };
       }
     }
 
-    // Fallback placeholder for books/chapters not yet bundled offline
+    // Fallback placeholder in the rare case a chapter is out of range
     return {
       verses: [
         {
           v: 1,
-          t: `Chapter ${chapter} of ${upperCode} in ${translation} is being prepared for download or sync with your Laravel API.`,
+          t: `Chapter ${chapter} of ${upperCode} in ${translation} could not be loaded offline.`,
         },
       ],
       isBundled: false,
     };
+  },
+
+  searchVerses(
+    query: string,
+    translation: TranslationCode,
+    limit: number = 20
+  ): Array<{ bookCode: string; chapter: number; verse: number; text: string }> {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return [];
+
+    const data = getTranslationData(translation);
+    if (!data) return [];
+
+    const results: Array<{
+      bookCode: string;
+      chapter: number;
+      verse: number;
+      text: string;
+    }> = [];
+
+    const books = booksData as BibleBook[];
+    for (const book of books) {
+      const bookVerses = data[book.code];
+      if (!bookVerses) continue;
+
+      for (let chIdx = 0; chIdx < bookVerses.length; chIdx++) {
+        const ch = bookVerses[chIdx];
+        for (let vIdx = 0; vIdx < ch.length; vIdx++) {
+          const text = ch[vIdx];
+          if (text.toLowerCase().includes(trimmed)) {
+            results.push({
+              bookCode: book.code,
+              chapter: chIdx + 1,
+              verse: vIdx + 1,
+              text,
+            });
+            if (results.length >= limit) return results;
+          }
+        }
+      }
+    }
+
+    return results;
   },
 };

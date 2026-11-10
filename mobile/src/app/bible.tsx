@@ -1,5 +1,6 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams } from 'expo-router';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Modal,
   Pressable,
@@ -25,9 +26,18 @@ const COLORS = {
   textSecondary: '#9296A3',
   border: '#2A3040',
   activeTab: '#262D3D',
+  success: '#8BB89B',
 };
 
 export default function BibleScreen() {
+  const params = useLocalSearchParams<{
+    book?: string;
+    chapter?: string;
+    translation?: string;
+  }>();
+
+  const scrollRef = useRef<React.ElementRef<typeof ScrollView>>(null);
+
   // Navigation & Reader State
   const [currentBookCode, setCurrentBookCode] = useState<string>('JHN');
   const [currentChapter, setCurrentChapter] = useState<number>(1);
@@ -36,56 +46,126 @@ export default function BibleScreen() {
 
   // Selector Modal State
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [translationModalVisible, setTranslationModalVisible] = useState<boolean>(false);
   const [selectedTestament, setSelectedTestament] = useState<Testament>('NT');
   const [tempBook, setTempBook] = useState<BibleBook | null>(null);
 
-  // Get active book metadata
+  // Handle incoming deep link or router params
+  useEffect(() => {
+    if (params.book && typeof params.book === 'string') {
+      const code = params.book.toUpperCase();
+      if (BibleService.getBookByCode(code)) {
+        setCurrentBookCode(code);
+      }
+    }
+    if (params.chapter) {
+      const ch = parseInt(String(params.chapter), 10);
+      if (!isNaN(ch) && ch > 0) {
+        setCurrentChapter(ch);
+      }
+    }
+    if (params.translation && typeof params.translation === 'string') {
+      const tr = params.translation.toUpperCase() as TranslationCode;
+      if (TRANSLATIONS.some((t) => t.code === tr)) {
+        setTranslation(tr);
+      }
+    }
+  }, [params.book, params.chapter, params.translation]);
+
+  // Reset scroll to top when chapter or book or translation changes
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [currentBookCode, currentChapter, translation]);
+
+  // All books
+  const allBooks = useMemo(() => BibleService.getBooks(), []);
+
+  // Active book metadata
   const currentBook = useMemo(() => {
-    return BibleService.getBookByCode(currentBookCode) ?? {
-      id: 43,
-      number: 43,
-      code: 'JHN',
-      name: 'John',
-      nameCeb: 'Juan',
-      testament: 'NT' as Testament,
-      chapters: 21,
-    };
+    return (
+      BibleService.getBookByCode(currentBookCode) ?? {
+        id: 43,
+        number: 43,
+        code: 'JHN',
+        name: 'John',
+        nameCeb: 'Juan',
+        testament: 'NT' as Testament,
+        chapters: 21,
+      }
+    );
   }, [currentBookCode]);
+
+  const currentBookIndex = useMemo(() => {
+    return allBooks.findIndex((b) => b.code === currentBook.code);
+  }, [allBooks, currentBook.code]);
 
   // Current translation info
   const translationInfo = useMemo(() => {
     return TRANSLATIONS.find((t) => t.code === translation) ?? TRANSLATIONS[0];
   }, [translation]);
 
-  // Current chapter verses
+  // Current chapter verses (fully offline for all translations)
   const chapterData = useMemo(() => {
     return BibleService.getChapterVerses(translation, currentBookCode, currentChapter);
   }, [translation, currentBookCode, currentChapter]);
 
-  // Books list filtered by testament for the modal
+  // Books list filtered by testament for the picker modal
   const booksInModal = useMemo(() => {
     return BibleService.getBooks(selectedTestament);
   }, [selectedTestament]);
 
-  // Displayed book name depending on language
+  // Displayed book name depending on active translation
   const displayedBookName =
     translation === 'RCPV' && currentBook.nameCeb
       ? currentBook.nameCeb
       : currentBook.name;
 
-  // Chapter navigation helpers
-  const canGoPrevious = currentChapter > 1;
-  const canGoNext = currentChapter < currentBook.chapters;
+  // Chapter navigation helpers (allows continuous reading across books)
+  const canGoPrevious = currentChapter > 1 || currentBookIndex > 0;
+  const canGoNext =
+    currentChapter < currentBook.chapters || currentBookIndex < allBooks.length - 1;
+
+  const prevButtonLabel = useMemo(() => {
+    if (currentChapter > 1) {
+      return `Chapter ${currentChapter - 1}`;
+    }
+    if (currentBookIndex > 0) {
+      const prevBook = allBooks[currentBookIndex - 1];
+      const name = translation === 'RCPV' && prevBook.nameCeb ? prevBook.nameCeb : prevBook.name;
+      return `${name} ${prevBook.chapters}`;
+    }
+    return '';
+  }, [currentChapter, currentBookIndex, allBooks, translation]);
+
+  const nextButtonLabel = useMemo(() => {
+    if (currentChapter < currentBook.chapters) {
+      return `Chapter ${currentChapter + 1}`;
+    }
+    if (currentBookIndex < allBooks.length - 1) {
+      const nextBook = allBooks[currentBookIndex + 1];
+      const name = translation === 'RCPV' && nextBook.nameCeb ? nextBook.nameCeb : nextBook.name;
+      return `${name} 1`;
+    }
+    return '';
+  }, [currentChapter, currentBook.chapters, currentBookIndex, allBooks, translation]);
 
   const handlePrevChapter = () => {
-    if (canGoPrevious) {
+    if (currentChapter > 1) {
       setCurrentChapter((c) => c - 1);
+    } else if (currentBookIndex > 0) {
+      const prevBook = allBooks[currentBookIndex - 1];
+      setCurrentBookCode(prevBook.code);
+      setCurrentChapter(prevBook.chapters);
     }
   };
 
   const handleNextChapter = () => {
-    if (canGoNext) {
+    if (currentChapter < currentBook.chapters) {
       setCurrentChapter((c) => c + 1);
+    } else if (currentBookIndex < allBooks.length - 1) {
+      const nextBook = allBooks[currentBookIndex + 1];
+      setCurrentBookCode(nextBook.code);
+      setCurrentChapter(1);
     }
   };
 
@@ -114,62 +194,63 @@ export default function BibleScreen() {
       {/* TOP HEADER CONTROLS */}
       <View style={styles.header}>
         {/* Book & Chapter Trigger */}
-        <Pressable style={styles.bookSelectorButton} onPress={openBookPicker}>
-          <Text style={styles.bookSelectorText}>
+        <Pressable
+          style={styles.bookSelectorButton}
+          onPress={openBookPicker}
+          accessibilityRole="button"
+          accessibilityLabel="Select book and chapter"
+        >
+          <Text style={styles.bookSelectorText} numberOfLines={1}>
             {displayedBookName} {currentChapter}
           </Text>
           <Ionicons name="chevron-down" size={16} color={COLORS.gold} />
         </Pressable>
 
-        {/* Translation Switcher & Font Zoom Controls */}
+        {/* Translation Switcher & Font Controls */}
         <View style={styles.headerRightControls}>
-          {/* Translation Toggle Pill */}
+          {/* Translation Toggle Pills (All 4 translations) */}
           <View style={styles.translationPill}>
-            <Pressable
-              style={[
-                styles.translationOption,
-                translation === 'KJV' && styles.translationOptionActive,
-              ]}
-              onPress={() => setTranslation('KJV')}
-            >
-              <Text
-                style={[
-                  styles.translationText,
-                  translation === 'KJV' && styles.translationTextActive,
-                ]}
-              >
-                KJV
-              </Text>
-            </Pressable>
-            <Pressable
-              style={[
-                styles.translationOption,
-                translation === 'RCPV' && styles.translationOptionActive,
-              ]}
-              onPress={() => setTranslation('RCPV')}
-            >
-              <Text
-                style={[
-                  styles.translationText,
-                  translation === 'RCPV' && styles.translationTextActive,
-                ]}
-              >
-                RCPV
-              </Text>
-            </Pressable>
+            {TRANSLATIONS.map((t) => {
+              const active = translation === t.code;
+              return (
+                <Pressable
+                  key={t.code}
+                  style={[
+                    styles.translationOption,
+                    active && styles.translationOptionActive,
+                  ]}
+                  onPress={() => setTranslation(t.code)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Switch translation to ${t.code}`}
+                >
+                  <Text
+                    style={[
+                      styles.translationText,
+                      active && styles.translationTextActive,
+                    ]}
+                  >
+                    {t.code}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
           {/* Font Size Adjusters */}
           <View style={styles.fontControls}>
             <Pressable
               style={styles.fontBtn}
-              onPress={() => setFontSize((s) => Math.max(15, s - 1))}
+              onPress={() => setFontSize((s) => Math.max(14, s - 1))}
+              accessibilityRole="button"
+              accessibilityLabel="Decrease font size"
             >
               <Text style={styles.fontBtnText}>A-</Text>
             </Pressable>
             <Pressable
               style={styles.fontBtn}
-              onPress={() => setFontSize((s) => Math.min(26, s + 1))}
+              onPress={() => setFontSize((s) => Math.min(28, s + 1))}
+              accessibilityRole="button"
+              accessibilityLabel="Increase font size"
             >
               <Text style={styles.fontBtnText}>A+</Text>
             </Pressable>
@@ -179,19 +260,37 @@ export default function BibleScreen() {
 
       {/* SCRIPTURE READING VIEW */}
       <ScrollView
+        ref={scrollRef}
         style={styles.readingScroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {/* CHAPTER HEADING */}
         <View style={styles.chapterHeader}>
-          <Text style={styles.testamentLabel}>
-            {currentBook.testament === 'OT' ? 'OLD TESTAMENT' : 'NEW TESTAMENT'} ·{' '}
-            {translationInfo.name.toUpperCase()}
-          </Text>
+          <View style={styles.testamentBadgeRow}>
+            <Text style={styles.testamentLabel}>
+              {currentBook.testament === 'OT' ? 'OLD TESTAMENT' : 'NEW TESTAMENT'}
+            </Text>
+            <View style={styles.offlinePill}>
+              <Ionicons name="checkmark-circle" size={12} color={COLORS.success} />
+              <Text style={styles.offlinePillText}>OFFLINE</Text>
+            </View>
+          </View>
+
           <Text style={styles.chapterTitle}>
             {displayedBookName} {currentChapter}
           </Text>
+
+          <Pressable
+            style={styles.translationSubtitleBtn}
+            onPress={() => setTranslationModalVisible(true)}
+          >
+            <Text style={styles.translationSubTitle}>
+              {translationInfo.name} ({translationInfo.code})
+            </Text>
+            <Ionicons name="information-circle-outline" size={15} color={COLORS.gold} />
+          </Pressable>
+
           <View style={styles.goldDivider} />
         </View>
 
@@ -214,11 +313,10 @@ export default function BibleScreen() {
           </View>
         ) : (
           <View style={styles.placeholderCard}>
-            <Ionicons name="cloud-download-outline" size={36} color={COLORS.gold} />
-            <Text style={styles.placeholderTitle}>Chapter Available via Sync</Text>
+            <Ionicons name="alert-circle-outline" size={36} color={COLORS.gold} />
+            <Text style={styles.placeholderTitle}>Chapter Not Found</Text>
             <Text style={styles.placeholderBody}>
-              {currentBook.name} Chapter {currentChapter} in {translationInfo.name} will be
-              synced from your Laravel API or loaded in full offline bundles.
+              {currentBook.name} Chapter {currentChapter} in {translationInfo.name} could not be loaded.
             </Text>
             <Pressable
               style={styles.backToJohnBtn}
@@ -227,7 +325,7 @@ export default function BibleScreen() {
                 setCurrentChapter(1);
               }}
             >
-              <Text style={styles.backToJohnText}>Read John 1 (Bundled) →</Text>
+              <Text style={styles.backToJohnText}>Go to John 1 →</Text>
             </Pressable>
           </View>
         )}
@@ -249,8 +347,9 @@ export default function BibleScreen() {
                 styles.navBtnText,
                 !canGoPrevious && styles.navBtnTextDisabled,
               ]}
+              numberOfLines={1}
             >
-              Chapter {currentChapter - 1}
+              {prevButtonLabel}
             </Text>
           </Pressable>
 
@@ -268,8 +367,9 @@ export default function BibleScreen() {
                 styles.navBtnText,
                 !canGoNext && styles.navBtnTextDisabled,
               ]}
+              numberOfLines={1}
             >
-              Chapter {currentChapter + 1}
+              {nextButtonLabel}
             </Text>
             <Ionicons
               name="chevron-forward"
@@ -281,14 +381,89 @@ export default function BibleScreen() {
 
         {/* COPYRIGHT / ATTRIBUTION FOOTER */}
         <View style={styles.attributionFooter}>
-          <Text style={styles.attributionText}>
-            ✦ {translationInfo.name} ({translationInfo.code})
-          </Text>
+          <View style={styles.footerBadge}>
+            <Ionicons name="cloud-done-outline" size={15} color={COLORS.gold} />
+            <Text style={styles.attributionText}>
+              {translationInfo.name} ({translationInfo.code}) · Complete Offline Bible
+            </Text>
+          </View>
           <Text style={styles.copyrightText}>
             {translationInfo.copyrightNotice}
           </Text>
         </View>
       </ScrollView>
+
+      {/* TRANSLATION SELECTION / INFO MODAL */}
+      <Modal
+        visible={translationModalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setTranslationModalVisible(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={styles.translationModalCard}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Bible Translations</Text>
+                <Text style={styles.modalSubtitle}>All 4 translations are 100% available offline</Text>
+              </View>
+              <Pressable
+                style={styles.modalCloseBtn}
+                onPress={() => setTranslationModalVisible(false)}
+              >
+                <Ionicons name="close" size={22} color={COLORS.textPrimary} />
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.translationList} showsVerticalScrollIndicator={false}>
+              {TRANSLATIONS.map((item) => {
+                const isSelected = translation === item.code;
+                return (
+                  <Pressable
+                    key={item.code}
+                    style={[
+                      styles.translationCard,
+                      isSelected && styles.translationCardActive,
+                    ]}
+                    onPress={() => {
+                      setTranslation(item.code);
+                      setTranslationModalVisible(false);
+                    }}
+                  >
+                    <View style={styles.translationCardHeader}>
+                      <View style={styles.translationCodeBadge}>
+                        <Text style={styles.translationCodeText}>{item.code}</Text>
+                      </View>
+                      <View style={styles.translationNameCol}>
+                        <Text style={styles.translationCardTitle}>{item.name}</Text>
+                        <Text style={styles.translationCardLang}>{item.language}</Text>
+                      </View>
+                      {isSelected ? (
+                        <Ionicons name="checkmark-circle" size={22} color={COLORS.gold} />
+                      ) : (
+                        <Ionicons name="ellipse-outline" size={22} color={COLORS.textSecondary} />
+                      )}
+                    </View>
+
+                    <View style={styles.translationCardStatus}>
+                      <Ionicons name="cloud-done" size={13} color={COLORS.success} />
+                      <Text style={styles.translationCardStatusText}>
+                        Downloaded · Full Old & New Testament
+                      </Text>
+                    </View>
+
+                    {item.copyrightNotice && (
+                      <Text style={styles.translationNoticeText}>
+                        {item.copyrightNotice}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
 
       {/* BOOK & CHAPTER SELECTOR MODAL */}
       <Modal
@@ -435,8 +610,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     backgroundColor: COLORS.card,
@@ -445,22 +620,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.cardSecondary,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 7,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
     gap: 6,
+    flexShrink: 1,
+    maxWidth: '42%',
   },
   bookSelectorText: {
     color: COLORS.textPrimary,
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
   headerRightControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 6,
+    flexShrink: 0,
   },
   translationPill: {
     flexDirection: 'row',
@@ -471,7 +649,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   translationOption: {
-    paddingHorizontal: 8,
+    paddingHorizontal: 7,
     paddingVertical: 4,
     borderRadius: 5,
   },
@@ -495,7 +673,7 @@ const styles = StyleSheet.create({
     padding: 2,
   },
   fontBtn: {
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 4,
   },
   fontBtnText: {
@@ -508,25 +686,61 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 20,
-    paddingVertical: 24,
+    paddingVertical: 22,
     paddingBottom: 40,
   },
   chapterHeader: {
     alignItems: 'center',
-    marginBottom: 26,
+    marginBottom: 24,
+  },
+  testamentBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
   },
   testamentLabel: {
     color: COLORS.gold,
     fontSize: 11,
     letterSpacing: 2,
     fontWeight: '700',
-    marginBottom: 6,
+  },
+  offlinePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 184, 155, 0.15)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    gap: 4,
+  },
+  offlinePillText: {
+    color: COLORS.success,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   chapterTitle: {
     color: COLORS.textPrimary,
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: 0.5,
+    textAlign: 'center',
+  },
+  translationSubtitleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 6,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    backgroundColor: COLORS.cardSecondary,
+  },
+  translationSubTitle: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
   },
   goldDivider: {
     width: 40,
@@ -536,7 +750,7 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   versesContainer: {
-    marginBottom: 30,
+    marginBottom: 28,
   },
   verseRow: {
     flexDirection: 'row',
@@ -547,7 +761,7 @@ const styles = StyleSheet.create({
     color: COLORS.gold,
     fontSize: 12,
     fontWeight: '700',
-    width: 24,
+    width: 26,
     paddingTop: 4,
   },
   verseText: {
@@ -593,30 +807,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 18,
+    paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     marginBottom: 24,
+    gap: 8,
   },
   navBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLORS.card,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.border,
     gap: 4,
+    maxWidth: '42%',
   },
   navBtnDisabled: {
-    opacity: 0.4,
+    opacity: 0.35,
   },
   navBtnText: {
     color: COLORS.gold,
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
   },
   navBtnTextDisabled: {
@@ -629,22 +845,31 @@ const styles = StyleSheet.create({
   },
   attributionFooter: {
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  footerBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
   },
   attributionText: {
     color: COLORS.gold,
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4,
   },
   copyrightText: {
     color: COLORS.textSecondary,
     fontSize: 11,
     textAlign: 'center',
+    lineHeight: 16,
+    maxWidth: 320,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    backgroundColor: 'rgba(0, 0, 0, 0.78)',
     justifyContent: 'flex-end',
   },
   modalContainer: {
@@ -654,6 +879,15 @@ const styles = StyleSheet.create({
     height: '85%',
     borderWidth: 1,
     borderColor: COLORS.border,
+  },
+  translationModalCard: {
+    backgroundColor: COLORS.card,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingBottom: 24,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -669,8 +903,79 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  modalSubtitle: {
+    color: COLORS.gold,
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+  },
   modalCloseBtn: {
-    padding: 4,
+    padding: 6,
+  },
+  translationList: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  translationCard: {
+    backgroundColor: COLORS.cardSecondary,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  translationCardActive: {
+    borderColor: COLORS.gold,
+    backgroundColor: 'rgba(216, 181, 109, 0.08)',
+  },
+  translationCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  translationCodeBadge: {
+    backgroundColor: COLORS.goldMuted,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: COLORS.gold,
+  },
+  translationCodeText: {
+    color: COLORS.gold,
+    fontWeight: '800',
+    fontSize: 13,
+  },
+  translationNameCol: {
+    flex: 1,
+  },
+  translationCardTitle: {
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  translationCardLang: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  translationCardStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  translationCardStatusText: {
+    color: COLORS.success,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  translationNoticeText: {
+    color: COLORS.textSecondary,
+    fontSize: 10,
+    marginTop: 6,
+    fontStyle: 'italic',
   },
   testamentTabs: {
     flexDirection: 'row',
