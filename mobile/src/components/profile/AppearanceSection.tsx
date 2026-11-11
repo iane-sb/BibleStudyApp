@@ -1,17 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+import { useAppTheme } from '@/contexts/ThemeContext';
 import { AppearanceTheme } from '@/types/profile';
-
-const COLORS = {
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
 
 interface AppearanceSectionProps {
   currentTheme: AppearanceTheme;
@@ -22,6 +13,8 @@ export function AppearanceSection({
   currentTheme,
   onThemeSelect,
 }: AppearanceSectionProps) {
+  const { colors } = useAppTheme();
+
   const options: {
     id: AppearanceTheme;
     title: string;
@@ -37,13 +30,13 @@ export function AppearanceSection({
     {
       id: 'light',
       title: 'Light Mode',
-      subtitle: 'Crisp, high-contrast daytime reading',
+      subtitle: 'Crisp, clean daytime reading palette',
       icon: 'sunny-outline',
     },
     {
       id: 'system',
       title: 'System Default',
-      subtitle: 'Automatically sync with Android system theme',
+      subtitle: 'Follows your Android / iOS appearance setting',
       icon: 'phone-portrait-outline',
     },
   ];
@@ -51,18 +44,26 @@ export function AppearanceSection({
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>✦ THEME & PALETTE</Text>
-        <Text style={styles.sectionTitle}>Appearance Settings</Text>
+        <Text style={[styles.eyebrow, { color: colors.gold }]}>✦ THEME & PALETTE</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Appearance Settings</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+          Theme changes apply to the entire app immediately.
+        </Text>
       </View>
 
-      <View style={styles.card}>
+      <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         {options.map((opt, index) => {
           const isSelected = currentTheme === opt.id;
           return (
             <View key={opt.id}>
-              {index > 0 && <View style={styles.divider} />}
+              {index > 0 && (
+                <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
+              )}
               <TouchableOpacity
-                style={[styles.row, isSelected && styles.rowSelected]}
+                style={[
+                  styles.row,
+                  isSelected && { backgroundColor: `${colors.goldMuted}` },
+                ]}
                 onPress={() => onThemeSelect(opt.id)}
                 activeOpacity={0.7}
               >
@@ -70,35 +71,45 @@ export function AppearanceSection({
                   <View
                     style={[
                       styles.iconCircle,
-                      isSelected && styles.iconCircleSelected,
+                      {
+                        backgroundColor: isSelected
+                          ? colors.goldMuted
+                          : colors.cardSecondary,
+                      },
                     ]}
                   >
                     <Ionicons
                       name={opt.icon as any}
                       size={18}
-                      color={isSelected ? COLORS.gold : COLORS.textSecondary}
+                      color={isSelected ? colors.gold : colors.textSecondary}
                     />
                   </View>
                   <View style={styles.textCol}>
                     <Text
                       style={[
-                        styles.titleText,
-                        isSelected && styles.titleTextSelected,
+                        styles.optTitle,
+                        { color: isSelected ? colors.gold : colors.textPrimary },
                       ]}
                     >
                       {opt.title}
                     </Text>
-                    <Text style={styles.subtitleText}>{opt.subtitle}</Text>
+                    <Text style={[styles.optSubtitle, { color: colors.textSecondary }]}>
+                      {opt.subtitle}
+                    </Text>
                   </View>
                 </View>
 
                 <View
                   style={[
-                    styles.radioCircle,
-                    isSelected && styles.radioCircleSelected,
+                    styles.radio,
+                    {
+                      borderColor: isSelected ? colors.gold : '#4A5060',
+                    },
                   ]}
                 >
-                  {isSelected && <View style={styles.radioDot} />}
+                  {isSelected && (
+                    <View style={[styles.radioDot, { backgroundColor: colors.gold }]} />
+                  )}
                 </View>
               </TouchableOpacity>
             </View>
@@ -110,31 +121,12 @@ export function AppearanceSection({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: 24,
-  },
-  sectionHeader: {
-    marginBottom: 12,
-  },
-  sectionEyebrow: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.gold,
-    letterSpacing: 1,
-    marginBottom: 2,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-  },
-  card: {
-    backgroundColor: COLORS.card,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    padding: 6,
-  },
+  container: { marginBottom: 24 },
+  sectionHeader: { marginBottom: 12 },
+  eyebrow: { fontSize: 10, fontWeight: '700', letterSpacing: 1, marginBottom: 2 },
+  title: { fontSize: 18, fontWeight: '700' },
+  subtitle: { fontSize: 12, marginTop: 2 },
+  card: { borderRadius: 20, borderWidth: 1, padding: 6 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -142,63 +134,18 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 14,
   },
-  rowSelected: {
-    backgroundColor: 'rgba(216, 181, 109, 0.06)',
-  },
-  leftCol: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-    gap: 12,
-  },
+  leftCol: { flexDirection: 'row', alignItems: 'center', flex: 1, gap: 12 },
   iconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.cardLight,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
   },
-  iconCircleSelected: {
-    backgroundColor: COLORS.goldMuted,
+  textCol: { flex: 1 },
+  optTitle: { fontSize: 14, fontWeight: '600' },
+  optSubtitle: { fontSize: 11, marginTop: 2 },
+  radio: {
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 2, alignItems: 'center', justifyContent: 'center',
   },
-  textCol: {
-    flex: 1,
-  },
-  titleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.textPrimary,
-  },
-  titleTextSelected: {
-    color: COLORS.gold,
-  },
-  subtitleText: {
-    fontSize: 11,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  radioCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: '#4A5060',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioCircleSelected: {
-    borderColor: COLORS.gold,
-  },
-  radioDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: COLORS.gold,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
-    marginHorizontal: 10,
-  },
+  radioDot: { width: 10, height: 10, borderRadius: 5 },
+  divider: { height: 1, marginHorizontal: 10 },
 });

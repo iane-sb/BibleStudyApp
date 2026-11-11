@@ -14,17 +14,7 @@ import {
   View,
 } from 'react-native';
 
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
+import { useAppTheme } from '@/contexts/ThemeContext';
 
 const CATEGORIES = [
   { id: 'general', label: 'General' },
@@ -39,6 +29,7 @@ interface FeedbackModalProps {
 }
 
 export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
+  const { colors } = useAppTheme();
   const [category, setCategory] = useState('general');
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -50,7 +41,6 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
     }
 
     setSubmitting(true);
-    // Simulates sending to Laravel feedback endpoint
     await new Promise((res) => setTimeout(res, 600));
     setSubmitting(false);
     setComment('');
@@ -72,18 +62,28 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.overlay}
       >
-        <View style={styles.sheetContainer}>
-          <View style={styles.sheetHeader}>
+        <View
+          style={[
+            styles.sheetContainer,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.sheetHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
             <View>
-              <Text style={styles.sheetEyebrow}>✦ WE HEAR YOU</Text>
-              <Text style={styles.sheetTitle}>Send Feedback</Text>
+              <Text style={[styles.sheetEyebrow, { color: colors.gold }]}>✦ WE HEAR YOU</Text>
+              <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>Send Feedback</Text>
             </View>
             <TouchableOpacity
               onPress={onClose}
-              style={styles.closeBtn}
+              style={[styles.closeBtn, { backgroundColor: colors.cardSecondary }]}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+              <Ionicons name="close" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -91,13 +91,13 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.body}
           >
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               Your feedback shapes the future of Word & Wisdom. Share any thoughts,
               feature requests, or translation corrections.
             </Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.fieldLabel}>FEEDBACK TOPIC</Text>
+              <Text style={[styles.fieldLabel, { color: colors.gold }]}>FEEDBACK TOPIC</Text>
               <View style={styles.categoriesRow}>
                 {CATEGORIES.map((cat) => {
                   const isSelected = category === cat.id;
@@ -106,7 +106,10 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
                       key={cat.id}
                       style={[
                         styles.categoryPill,
-                        isSelected && styles.categoryPillSelected,
+                        {
+                          backgroundColor: isSelected ? colors.goldMuted : colors.cardSecondary,
+                          borderColor: isSelected ? colors.gold : colors.border,
+                        },
                       ]}
                       onPress={() => setCategory(cat.id)}
                       activeOpacity={0.7}
@@ -114,7 +117,8 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
                       <Text
                         style={[
                           styles.categoryText,
-                          isSelected && styles.categoryTextSelected,
+                          { color: isSelected ? colors.gold : colors.textSecondary },
+                          isSelected && { fontWeight: '700' },
                         ]}
                       >
                         {cat.label}
@@ -126,14 +130,19 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.fieldLabel}>YOUR MESSAGE</Text>
-              <View style={styles.textAreaWrapper}>
+              <Text style={[styles.fieldLabel, { color: colors.gold }]}>YOUR MESSAGE</Text>
+              <View
+                style={[
+                  styles.textAreaWrapper,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
                 <TextInput
-                  style={styles.textArea}
+                  style={[styles.textArea, { color: colors.textPrimary }]}
                   value={comment}
                   onChangeText={setComment}
                   placeholder="Tell us what you love or what we could improve..."
-                  placeholderTextColor="#5C6272"
+                  placeholderTextColor={colors.textMuted}
                   multiline
                   numberOfLines={5}
                 />
@@ -142,16 +151,19 @@ export function FeedbackModal({ visible, onClose }: FeedbackModalProps) {
 
             <View style={styles.footerRow}>
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={[
+                  styles.cancelBtn,
+                  { backgroundColor: colors.cardSecondary, borderColor: colors.border },
+                ]}
                 onPress={onClose}
                 disabled={submitting}
                 activeOpacity={0.7}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.saveBtn}
+                style={[styles.saveBtn, { backgroundColor: colors.gold }]}
                 onPress={handleSubmit}
                 disabled={submitting}
                 activeOpacity={0.8}
@@ -180,11 +192,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: COLORS.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingBottom: 24,
     maxHeight: '85%',
   },
@@ -196,24 +206,20 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
   },
   sheetEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
   },
   sheetTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -223,7 +229,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: COLORS.textSecondary,
     lineHeight: 19,
     marginBottom: 16,
   },
@@ -233,7 +238,6 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 0.8,
     marginBottom: 8,
   },
@@ -243,37 +247,23 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryPill: {
-    backgroundColor: COLORS.cardLight,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 12,
   },
-  categoryPillSelected: {
-    backgroundColor: COLORS.goldMuted,
-    borderColor: COLORS.gold,
-  },
   categoryText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
     fontWeight: '500',
   },
-  categoryTextSelected: {
-    color: COLORS.gold,
-    fontWeight: '700',
-  },
   textAreaWrapper: {
-    backgroundColor: COLORS.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 12,
   },
   textArea: {
     minHeight: 110,
     fontSize: 14,
-    color: COLORS.textPrimary,
     textAlignVertical: 'top',
   },
   footerRow: {
@@ -283,23 +273,19 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    backgroundColor: COLORS.cardLight,
     borderRadius: 14,
     paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   cancelBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   saveBtn: {
     flex: 2,
     flexDirection: 'row',
-    backgroundColor: COLORS.gold,
     borderRadius: 14,
     paddingVertical: 13,
     alignItems: 'center',

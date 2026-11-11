@@ -8,16 +8,7 @@ import {
   View,
 } from 'react-native';
 
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
+import { useAppTheme } from '@/contexts/ThemeContext';
 
 export type InfoModalType = 'help' | 'privacy' | 'terms' | 'about' | null;
 
@@ -27,6 +18,8 @@ interface InfoContentModalProps {
 }
 
 export function InfoContentModal({ type, onClose }: InfoContentModalProps) {
+  const { colors } = useAppTheme();
+
   if (!type) return null;
 
   const getContent = () => {
@@ -65,7 +58,7 @@ export function InfoContentModal({ type, onClose }: InfoContentModalProps) {
             },
             {
               heading: 'Data Storage & Encryption',
-              body: 'All study statistics, bookmarks, and private journal entries are encrypted in transit and at rest using modern AES-256 standard protocols.',
+              body: 'All study statistics, bookmarks, and private journal entries are encrypted in transit and at rest using modern standard protocols.',
             },
             {
               heading: 'Analytics & Diagnostic Logs',
@@ -130,18 +123,32 @@ export function InfoContentModal({ type, onClose }: InfoContentModalProps) {
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
-        <View style={styles.sheetContainer}>
-          <View style={styles.sheetHeader}>
+        <View
+          style={[
+            styles.sheetContainer,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.sheetHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
             <View>
-              <Text style={styles.sheetEyebrow}>✦ {content.eyebrow}</Text>
-              <Text style={styles.sheetTitle}>{content.title}</Text>
+              <Text style={[styles.sheetEyebrow, { color: colors.gold }]}>
+                ✦ {content.eyebrow}
+              </Text>
+              <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>
+                {content.title}
+              </Text>
             </View>
             <TouchableOpacity
               onPress={onClose}
-              style={styles.closeBtn}
+              style={[styles.closeBtn, { backgroundColor: colors.cardSecondary }]}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+              <Ionicons name="close" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -150,20 +157,35 @@ export function InfoContentModal({ type, onClose }: InfoContentModalProps) {
             contentContainerStyle={styles.scrollBody}
           >
             {content.sections.map((section, idx) => (
-              <View key={idx} style={styles.sectionBlock}>
-                <Text style={styles.sectionHeading}>{section.heading}</Text>
-                <Text style={styles.sectionBody}>{section.body}</Text>
+              <View
+                key={idx}
+                style={[
+                  styles.sectionBlock,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
+                <Text style={[styles.sectionHeading, { color: colors.gold }]}>
+                  {section.heading}
+                </Text>
+                <Text style={[styles.sectionBody, { color: colors.textPrimary }]}>
+                  {section.body}
+                </Text>
               </View>
             ))}
           </ScrollView>
 
           <View style={styles.footer}>
             <TouchableOpacity
-              style={styles.doneBtn}
+              style={[
+                styles.doneBtn,
+                { backgroundColor: colors.cardSecondary, borderColor: colors.border },
+              ]}
               onPress={onClose}
               activeOpacity={0.8}
             >
-              <Text style={styles.doneBtnText}>Close</Text>
+              <Text style={[styles.doneBtnText, { color: colors.textPrimary }]}>
+                Close
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -179,11 +201,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: COLORS.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
     maxHeight: '85%',
     paddingBottom: 24,
   },
@@ -195,24 +215,20 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
   },
   sheetEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
   },
   sheetTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -222,21 +238,17 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   sectionBlock: {
-    backgroundColor: COLORS.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 14,
   },
   sectionHeading: {
     fontSize: 14,
     fontWeight: '700',
-    color: COLORS.gold,
     marginBottom: 6,
   },
   sectionBody: {
     fontSize: 13,
-    color: COLORS.textPrimary,
     lineHeight: 20,
   },
   footer: {
@@ -244,9 +256,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   doneBtn: {
-    backgroundColor: COLORS.cardLight,
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 14,
     paddingVertical: 12,
     alignItems: 'center',
@@ -255,6 +265,5 @@ const styles = StyleSheet.create({
   doneBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.textPrimary,
   },
 });

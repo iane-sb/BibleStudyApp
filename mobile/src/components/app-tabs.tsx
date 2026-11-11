@@ -1,16 +1,10 @@
-
-import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Tabs } from 'expo-router';
 import type { ComponentProps } from 'react';
 
-type IoniconName = ComponentProps<typeof Ionicons>['name'];
+import { useAppTheme } from '@/contexts/ThemeContext';
 
-const COLORS = {
-  background: '#10131D',
-  active: '#D8B56D',
-  inactive: '#858A99',
-  border: '#292D39',
-};
+type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
 const tabIcons: Record<string, { active: IoniconName; inactive: IoniconName }> = {
   index: { active: 'home', inactive: 'home-outline' },
@@ -21,16 +15,18 @@ const tabIcons: Record<string, { active: IoniconName; inactive: IoniconName }> =
 };
 
 export default function AppTabs() {
+  const { colors, isDark } = useAppTheme();
+
   return (
     <Tabs
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: COLORS.active,
-        tabBarInactiveTintColor: COLORS.inactive,
+        tabBarActiveTintColor: colors.gold,
+        tabBarInactiveTintColor: isDark ? '#858A99' : '#A0A5B4',
         tabBarHideOnKeyboard: true,
         tabBarStyle: {
-          backgroundColor: COLORS.background,
-          borderTopColor: COLORS.border,
+          backgroundColor: colors.card,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: 64,
           paddingTop: 6,
@@ -40,10 +36,13 @@ export default function AppTabs() {
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          color: colors.textSecondary,
         },
         tabBarIcon: ({ color, focused }) => {
           const icons = tabIcons[route.name];
-          const iconName = icons ? (focused ? icons.active : icons.inactive) : 'ellipse-outline';
+          const iconName = icons
+            ? focused ? icons.active : icons.inactive
+            : 'ellipse-outline';
           return <Ionicons name={iconName} size={24} color={color as string} />;
         },
       })}

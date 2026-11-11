@@ -19,46 +19,34 @@ import { ChangePasswordModal } from '@/components/profile/ChangePasswordModal';
 import { EditProfileModal } from '@/components/profile/EditProfileModal';
 import { EmailModal } from '@/components/profile/EmailModal';
 import { FeedbackModal } from '@/components/profile/FeedbackModal';
-import {
-  InfoContentModal,
-  InfoModalType,
-} from '@/components/profile/InfoContentModal';
-import { SupportInfoSection } from '@/components/profile/SupportInfoSection';
+import { InfoContentModal, InfoModalType } from '@/components/profile/InfoContentModal';
 import { NotificationSection } from '@/components/profile/NotificationSection';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { SpiritualJourneyCards } from '@/components/profile/SpiritualJourneyCards';
 import { StudyPreferencesSection } from '@/components/profile/StudyPreferencesSection';
+import { SupportInfoSection } from '@/components/profile/SupportInfoSection';
+import { useAppTheme } from '@/contexts/ThemeContext';
 import { useProfile } from '@/hooks/use-profile';
 import {
-  AppearanceTheme,
   BibleStudyPreferences,
   NotificationPreferences,
   UserProfile,
 } from '@/types/profile';
 
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
-
 export default function ProfileScreen() {
+  const { colors, isDark, themePreference, setTheme } = useAppTheme();
+
   const {
     profile,
     stats,
     preferences,
-    appearance,
     notifications,
     privacy,
     loading,
     refreshStats,
     updateProfile,
+    updateAvatarUri,
     updatePreferences,
-    updateAppearance,
     updateNotifications,
     updatePrivacy,
     changePassword,
@@ -68,20 +56,18 @@ export default function ProfileScreen() {
   } = useProfile();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
 
-  // Modal Visibility States
+  // Modal states
   const [editProfileOpen, setEditProfileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const [manageEmailOpen, setManageEmailOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [infoModalType, setInfoModalType] = useState<InfoModalType>(null);
 
-  const showToast = (message: string) => {
-    setToastMessage(message);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 2400);
+  const showToast = (msg: string) => {
+    setToastMsg(msg);
+    setTimeout(() => setToastMsg(null), 2600);
   };
 
   const handleRefresh = async () => {
@@ -93,39 +79,42 @@ export default function ProfileScreen() {
 
   const handleSaveProfile = async (updates: Partial<UserProfile>) => {
     await updateProfile(updates);
-    showToast('Profile updated successfully');
+    showToast('Profile updated ✓');
   };
 
-  const handleUpdatePreferences = async (
-    updates: Partial<BibleStudyPreferences>
-  ) => {
+  const handleAvatarChange = async (localUri: string) => {
+    await updateAvatarUri(localUri);
+    showToast('Profile photo updated ✓');
+  };
+
+  const handleUpdatePreferences = async (updates: Partial<BibleStudyPreferences>) => {
     await updatePreferences(updates);
-    showToast('Preferences updated');
+    showToast('Preferences saved ✓');
   };
 
-  const handleUpdateAppearance = async (theme: AppearanceTheme) => {
-    await updateAppearance(theme);
-    showToast(`Theme switched to ${theme === 'dark' ? 'Dark' : theme === 'light' ? 'Light' : 'System Default'}`);
+  const handleUpdateAppearance = async (theme: typeof themePreference) => {
+    await setTheme(theme);
+    showToast(
+      `Theme: ${theme === 'dark' ? 'Dark Mode' : theme === 'light' ? 'Light Mode' : 'System Default'}`
+    );
   };
 
-  const handleUpdateNotifications = async (
-    updates: Partial<NotificationPreferences>
-  ) => {
+  const handleUpdateNotifications = async (updates: Partial<NotificationPreferences>) => {
     await updateNotifications(updates);
-    showToast('Notification settings saved');
+    showToast('Notifications updated ✓');
   };
 
   const handleUpgradePress = () => {
     Alert.alert(
       'Word & Wisdom Premium',
-      'Unlock unlimited reading plans, multi-translation parallel study, audio Bible narration, and cloud sync across all your devices.\n\nWould you like to activate Premium now?',
+      'Unlock unlimited reading plans, parallel translations, audio Bible, and cloud sync.\n\nActivate Premium now?',
       [
         { text: 'Maybe Later', style: 'cancel' },
         {
           text: 'Activate Premium ✦',
           onPress: async () => {
             await updateProfile({ membershipStatus: 'premium' });
-            showToast('Welcome to Word & Wisdom Premium! ✦');
+            showToast('Welcome to Premium! ✦');
           },
         },
       ]
@@ -134,57 +123,75 @@ export default function ProfileScreen() {
 
   const handleSignOut = async () => {
     await signOut();
-    Alert.alert(
-      'Signed Out',
-      'You have been safely signed out. May the peace of God be with you.'
-    );
+    Alert.alert('Signed Out', 'May the peace of God be with you.');
   };
 
   const handleDeleteAccount = async () => {
     await deleteAccount();
-    Alert.alert(
-      'Account Deleted',
-      'Your account and personal study records have been deleted.'
-    );
+    Alert.alert('Account Deleted', 'Your data has been erased.');
   };
 
+  // Loading screen
   if (loading || !profile || !stats || !preferences || !notifications || !privacy) {
     return (
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
-        <StatusBar barStyle="light-content" />
+      <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]} edges={['top']}>
+        <StatusBar barStyle={colors.statusBar} />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.gold} />
-          <Text style={styles.loadingText}>Loading your study sanctuary...</Text>
+          <ActivityIndicator size="large" color={colors.gold} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+            Loading your study sanctuary...
+          </Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: colors.background }]}
+      edges={['top']}
+    >
+      <StatusBar barStyle={colors.statusBar} />
 
-      {/* Screen Header Bar */}
-      <View style={styles.headerBar}>
+      {/* Header Bar */}
+      <View
+        style={[
+          styles.headerBar,
+          { borderBottomColor: colors.borderMuted },
+        ]}
+      >
         <View>
-          <Text style={styles.brandTitle}>✦ WORD & WISDOM</Text>
-          <Text style={styles.screenTitle}>Profile & Settings</Text>
+          <Text style={[styles.brandTitle, { color: colors.gold }]}>✦ WORD & WISDOM</Text>
+          <Text style={[styles.screenTitle, { color: colors.textPrimary }]}>
+            Profile & Settings
+          </Text>
         </View>
         <TouchableOpacity
-          style={styles.refreshButton}
+          style={[
+            styles.refreshBtn,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
           onPress={handleRefresh}
           activeOpacity={0.7}
           accessibilityLabel="Sync profile"
         >
-          <Ionicons name="sync-outline" size={18} color={COLORS.gold} />
+          <Ionicons name="sync-outline" size={18} color={colors.gold} />
         </TouchableOpacity>
       </View>
 
-      {/* Toast Notification Banner */}
-      {toastMessage && (
-        <View style={styles.toastBanner}>
-          <Ionicons name="checkmark-circle" size={16} color={COLORS.gold} />
-          <Text style={styles.toastText}>{toastMessage}</Text>
+      {/* Toast Banner */}
+      {toastMsg && (
+        <View
+          style={[
+            styles.toastBanner,
+            {
+              backgroundColor: `${colors.goldMuted}`,
+              borderBottomColor: `${colors.gold}44`,
+            },
+          ]}
+        >
+          <Ionicons name="checkmark-circle" size={15} color={colors.gold} />
+          <Text style={[styles.toastText, { color: colors.gold }]}>{toastMsg}</Text>
         </View>
       )}
 
@@ -195,40 +202,41 @@ export default function ProfileScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor={COLORS.gold}
-            colors={[COLORS.gold]}
+            tintColor={colors.gold}
+            colors={[colors.gold]}
           />
         }
       >
-        {/* SECTION A: Profile Header */}
+        {/* A: Profile Header */}
         <ProfileHeader
           profile={profile}
           onEditPress={() => setEditProfileOpen(true)}
           onUpgradePress={handleUpgradePress}
+          onAvatarChange={handleAvatarChange}
         />
 
-        {/* SECTION B: Spiritual Journey Overview */}
+        {/* B: Spiritual Journey */}
         <SpiritualJourneyCards stats={stats} />
 
-        {/* SECTION C: Bible Study Preferences */}
+        {/* C: Bible Study Preferences */}
         <StudyPreferencesSection
           preferences={preferences}
           onUpdate={handleUpdatePreferences}
         />
 
-        {/* SECTION D: Appearance Settings */}
+        {/* D: Appearance */}
         <AppearanceSection
-          currentTheme={appearance}
+          currentTheme={themePreference}
           onThemeSelect={handleUpdateAppearance}
         />
 
-        {/* SECTION E: Notifications */}
+        {/* E: Notifications */}
         <NotificationSection
           notifications={notifications}
           onUpdate={handleUpdateNotifications}
         />
 
-        {/* SECTION F: Account & Security */}
+        {/* F: Account & Security */}
         <AccountSecuritySection
           email={profile.email}
           privacy={privacy}
@@ -240,7 +248,7 @@ export default function ProfileScreen() {
           onDeleteAccount={handleDeleteAccount}
         />
 
-        {/* SECTION G: Support & Information */}
+        {/* G: Support & Info */}
         <SupportInfoSection
           onOpenHelp={() => setInfoModalType('help')}
           onOpenFeedback={() => setFeedbackOpen(true)}
@@ -250,7 +258,7 @@ export default function ProfileScreen() {
         />
       </ScrollView>
 
-      {/* MODALS */}
+      {/* Modals */}
       <EditProfileModal
         visible={editProfileOpen}
         profile={profile}
@@ -261,8 +269,9 @@ export default function ProfileScreen() {
       <ChangePasswordModal
         visible={changePasswordOpen}
         onClose={() => setChangePasswordOpen(false)}
-        onSubmit={async (currentPass, newPass) => {
-          await changePassword(currentPass, newPass);
+        onSubmit={async (cur, next) => {
+          await changePassword(cur, next);
+          showToast('Password updated ✓');
         }}
       />
 
@@ -270,30 +279,21 @@ export default function ProfileScreen() {
         visible={manageEmailOpen}
         currentEmail={profile.email}
         onClose={() => setManageEmailOpen(false)}
-        onSubmit={async (newEmail) => {
-          await updateEmail(newEmail);
-          showToast('Email address updated');
+        onSubmit={async (email) => {
+          await updateEmail(email);
+          showToast('Email updated ✓');
         }}
       />
 
-      <FeedbackModal
-        visible={feedbackOpen}
-        onClose={() => setFeedbackOpen(false)}
-      />
+      <FeedbackModal visible={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
-      <InfoContentModal
-        type={infoModalType}
-        onClose={() => setInfoModalType(null)}
-      />
+      <InfoContentModal type={infoModalType} onClose={() => setInfoModalType(null)} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
+  safeArea: { flex: 1 },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -302,47 +302,23 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.04)',
   },
-  brandTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: COLORS.gold,
-    letterSpacing: 1.2,
-  },
-  screenTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: COLORS.textPrimary,
-    marginTop: 2,
-    letterSpacing: 0.2,
-  },
-  refreshButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: COLORS.card,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+  brandTitle: { fontSize: 10, fontWeight: '700', letterSpacing: 1.2 },
+  screenTitle: { fontSize: 22, fontWeight: '800', marginTop: 2, letterSpacing: 0.2 },
+  refreshBtn: {
+    width: 36, height: 36, borderRadius: 18,
+    borderWidth: 1, alignItems: 'center', justifyContent: 'center',
   },
   toastBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(216, 181, 109, 0.16)',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(216, 181, 109, 0.3)',
     paddingVertical: 8,
     paddingHorizontal: 16,
     gap: 8,
+    borderBottomWidth: 1,
   },
-  toastText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: COLORS.gold,
-  },
+  toastText: { fontSize: 12, fontWeight: '600' },
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 16,
@@ -354,9 +330,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 12,
   },
-  loadingText: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    fontStyle: 'italic',
-  },
+  loadingText: { fontSize: 14, fontStyle: 'italic' },
 });

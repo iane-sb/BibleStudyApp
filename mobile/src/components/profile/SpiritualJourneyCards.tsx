@@ -1,51 +1,59 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { useAppTheme } from '@/contexts/ThemeContext';
 import { SpiritualJourneyStats } from '@/types/profile';
-
-const COLORS = {
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-  orange: '#F59E0B',
-  green: '#8BB89B',
-  blue: '#60A5FA',
-  purple: '#C084FC',
-};
 
 interface SpiritualJourneyCardsProps {
   stats: SpiritualJourneyStats;
 }
 
 export function SpiritualJourneyCards({ stats }: SpiritualJourneyCardsProps) {
+  const { colors } = useAppTheme();
+
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <View style={styles.headerLeft}>
-          <Text style={styles.sectionEyebrow}>✦ SPIRITUAL DISCIPLINE</Text>
-          <Text style={styles.sectionTitle}>Journey Overview</Text>
+          <Text style={[styles.sectionEyebrow, { color: colors.gold }]}>✦ SPIRITUAL DISCIPLINE</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Journey Overview</Text>
         </View>
-        <View style={styles.streakPill}>
-          <Ionicons name="flame" size={14} color={COLORS.orange} />
-          <Text style={styles.streakPillText}>{stats.currentStreakDays}d streak</Text>
+        <View
+          style={[
+            styles.streakPill,
+            { backgroundColor: `${colors.orange}1f`, borderColor: `${colors.orange}4d` },
+          ]}
+        >
+          <Ionicons name="flame" size={14} color={colors.orange} />
+          <Text style={[styles.streakPillText, { color: colors.orange }]}>
+            {stats.currentStreakDays}d streak
+          </Text>
         </View>
       </View>
 
       {/* Featured Streak Banner */}
-      <View style={styles.featuredCard}>
-        <View style={styles.featuredIconContainer}>
-          <Ionicons name="flame" size={28} color={COLORS.orange} />
+      <View
+        style={[
+          styles.featuredCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <View
+          style={[
+            styles.featuredIconContainer,
+            { backgroundColor: `${colors.orange}24`, borderColor: `${colors.orange}59` },
+          ]}
+        >
+          <Ionicons name="flame" size={28} color={colors.orange} />
         </View>
         <View style={styles.featuredContent}>
           <View style={styles.featuredRow}>
-            <Text style={styles.featuredNumber}>{stats.currentStreakDays}</Text>
-            <Text style={styles.featuredUnit}>Days In a Row</Text>
+            <Text style={[styles.featuredNumber, { color: colors.textPrimary }]}>
+              {stats.currentStreakDays}
+            </Text>
+            <Text style={[styles.featuredUnit, { color: colors.orange }]}>Days In a Row</Text>
           </View>
-          <Text style={styles.featuredSub}>
+          <Text style={[styles.featuredSub, { color: colors.textSecondary }]}>
             “Thy word is a lamp unto my feet, and a light unto my path.”
           </Text>
         </View>
@@ -54,39 +62,67 @@ export function SpiritualJourneyCards({ stats }: SpiritualJourneyCardsProps) {
       {/* 2x2 Stats Grid */}
       <View style={styles.grid}>
         {/* Chapters Read */}
-        <View style={styles.gridCard}>
-          <View style={[styles.iconBox, { backgroundColor: 'rgba(216, 181, 109, 0.12)' }]}>
-            <Ionicons name="book" size={18} color={COLORS.gold} />
+        <View
+          style={[
+            styles.gridCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <View style={[styles.iconBox, { backgroundColor: `${colors.gold}24` }]}>
+            <Ionicons name="book" size={18} color={colors.gold} />
           </View>
-          <Text style={styles.statValue}>{stats.chaptersRead}</Text>
-          <Text style={styles.statLabel}>Chapters Read</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+            {stats.chaptersRead}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Chapters Read</Text>
         </View>
 
         {/* Plans Completed */}
-        <View style={styles.gridCard}>
-          <View style={[styles.iconBox, { backgroundColor: 'rgba(139, 184, 155, 0.12)' }]}>
-            <Ionicons name="ribbon" size={18} color={COLORS.green} />
+        <View
+          style={[
+            styles.gridCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <View style={[styles.iconBox, { backgroundColor: `${colors.success}24` }]}>
+            <Ionicons name="ribbon" size={18} color={colors.success} />
           </View>
-          <Text style={styles.statValue}>{stats.readingPlansCompleted}</Text>
-          <Text style={styles.statLabel}>Plans Completed</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+            {stats.readingPlansCompleted}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Plans Completed</Text>
         </View>
 
         {/* Bookmarked Verses */}
-        <View style={styles.gridCard}>
-          <View style={[styles.iconBox, { backgroundColor: 'rgba(96, 165, 250, 0.12)' }]}>
-            <Ionicons name="bookmark" size={18} color={COLORS.blue} />
+        <View
+          style={[
+            styles.gridCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <View style={[styles.iconBox, { backgroundColor: `${colors.blue}24` }]}>
+            <Ionicons name="bookmark" size={18} color={colors.blue} />
           </View>
-          <Text style={styles.statValue}>{stats.totalBookmarkedVerses}</Text>
-          <Text style={styles.statLabel}>Bookmarks</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+            {stats.totalBookmarkedVerses}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Bookmarks</Text>
         </View>
 
         {/* Journal Entries */}
-        <View style={styles.gridCard}>
-          <View style={[styles.iconBox, { backgroundColor: 'rgba(192, 132, 252, 0.12)' }]}>
-            <Ionicons name="journal" size={18} color={COLORS.purple} />
+        <View
+          style={[
+            styles.gridCard,
+            { backgroundColor: colors.card, borderColor: colors.border },
+          ]}
+        >
+          <View style={[styles.iconBox, { backgroundColor: `${colors.purple}24` }]}>
+            <Ionicons name="journal" size={18} color={colors.purple} />
           </View>
-          <Text style={styles.statValue}>{stats.totalJournalEntries}</Text>
-          <Text style={styles.statLabel}>Journal Notes</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+            {stats.totalJournalEntries}
+          </Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Journal Notes</Text>
         </View>
       </View>
     </View>
@@ -107,21 +143,17 @@ const styles = StyleSheet.create({
   sectionEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
     marginBottom: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   streakPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 158, 11, 0.12)',
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.3)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
@@ -130,15 +162,12 @@ const styles = StyleSheet.create({
   streakPillText: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.orange,
   },
   featuredCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 14,
     marginBottom: 12,
     gap: 12,
@@ -147,9 +176,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.35)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -164,16 +191,13 @@ const styles = StyleSheet.create({
   featuredNumber: {
     fontSize: 22,
     fontWeight: '800',
-    color: COLORS.textPrimary,
   },
   featuredUnit: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.orange,
   },
   featuredSub: {
     fontSize: 11,
-    color: COLORS.textSecondary,
     fontStyle: 'italic',
     marginTop: 2,
   },
@@ -185,10 +209,8 @@ const styles = StyleSheet.create({
   gridCard: {
     flex: 1,
     minWidth: '47%',
-    backgroundColor: COLORS.card,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 14,
   },
   iconBox: {
@@ -202,11 +224,9 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   statLabel: {
     fontSize: 11,
-    color: COLORS.textSecondary,
     marginTop: 2,
     fontWeight: '500',
   },

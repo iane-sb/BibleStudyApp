@@ -13,16 +13,7 @@ import {
   View,
 } from 'react-native';
 
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
+import { useAppTheme } from '@/contexts/ThemeContext';
 
 interface ChangePasswordModalProps {
   visible: boolean;
@@ -35,6 +26,8 @@ export function ChangePasswordModal({
   onClose,
   onSubmit,
 }: ChangePasswordModalProps) {
+  const { colors } = useAppTheme();
+
   const [currentPass, setCurrentPass] = useState('');
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
@@ -100,33 +93,50 @@ export function ChangePasswordModal({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.overlay}
       >
-        <View style={styles.sheetContainer}>
-          <View style={styles.sheetHeader}>
+        <View
+          style={[
+            styles.sheetContainer,
+            { backgroundColor: colors.background, borderColor: colors.border },
+          ]}
+        >
+          <View
+            style={[
+              styles.sheetHeader,
+              { borderBottomColor: colors.border },
+            ]}
+          >
             <View>
-              <Text style={styles.sheetEyebrow}>✦ SECURITY</Text>
-              <Text style={styles.sheetTitle}>Change Password</Text>
+              <Text style={[styles.sheetEyebrow, { color: colors.gold }]}>✦ SECURITY</Text>
+              <Text style={[styles.sheetTitle, { color: colors.textPrimary }]}>
+                Change Password
+              </Text>
             </View>
             <TouchableOpacity
               onPress={handleClose}
-              style={styles.closeBtn}
+              style={[styles.closeBtn, { backgroundColor: colors.cardSecondary }]}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={20} color={COLORS.textSecondary} />
+              <Ionicons name="close" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.body}>
             {/* Current Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.fieldLabel}>CURRENT PASSWORD</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="key-outline" size={18} color={COLORS.gold} />
+              <Text style={[styles.fieldLabel, { color: colors.gold }]}>CURRENT PASSWORD</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
+                <Ionicons name="key-outline" size={18} color={colors.gold} />
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { color: colors.textPrimary }]}
                   value={currentPass}
                   onChangeText={setCurrentPass}
                   placeholder="Enter current password"
-                  placeholderTextColor="#5C6272"
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry={!showCurrent}
                 />
                 <TouchableOpacity
@@ -136,7 +146,7 @@ export function ChangePasswordModal({
                   <Ionicons
                     name={showCurrent ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color={COLORS.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -144,15 +154,20 @@ export function ChangePasswordModal({
 
             {/* New Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.fieldLabel}>NEW PASSWORD</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="lock-closed-outline" size={18} color={COLORS.gold} />
+              <Text style={[styles.fieldLabel, { color: colors.gold }]}>NEW PASSWORD</Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
+                <Ionicons name="lock-closed-outline" size={18} color={colors.gold} />
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { color: colors.textPrimary }]}
                   value={newPass}
                   onChangeText={setNewPass}
                   placeholder="Minimum 8 characters"
-                  placeholderTextColor="#5C6272"
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry={!showNew}
                 />
                 <TouchableOpacity
@@ -162,7 +177,7 @@ export function ChangePasswordModal({
                   <Ionicons
                     name={showNew ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color={COLORS.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -170,15 +185,22 @@ export function ChangePasswordModal({
 
             {/* Confirm New Password */}
             <View style={styles.inputGroup}>
-              <Text style={styles.fieldLabel}>CONFIRM NEW PASSWORD</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="checkmark-circle-outline" size={18} color={COLORS.gold} />
+              <Text style={[styles.fieldLabel, { color: colors.gold }]}>
+                CONFIRM NEW PASSWORD
+              </Text>
+              <View
+                style={[
+                  styles.inputWrapper,
+                  { backgroundColor: colors.card, borderColor: colors.border },
+                ]}
+              >
+                <Ionicons name="checkmark-circle-outline" size={18} color={colors.gold} />
                 <TextInput
-                  style={styles.textInput}
+                  style={[styles.textInput, { color: colors.textPrimary }]}
                   value={confirmPass}
                   onChangeText={setConfirmPass}
                   placeholder="Re-enter new password"
-                  placeholderTextColor="#5C6272"
+                  placeholderTextColor={colors.textMuted}
                   secureTextEntry={!showConfirm}
                 />
                 <TouchableOpacity
@@ -188,7 +210,7 @@ export function ChangePasswordModal({
                   <Ionicons
                     name={showConfirm ? 'eye-off-outline' : 'eye-outline'}
                     size={18}
-                    color={COLORS.textSecondary}
+                    color={colors.textSecondary}
                   />
                 </TouchableOpacity>
               </View>
@@ -196,16 +218,21 @@ export function ChangePasswordModal({
 
             <View style={styles.footerRow}>
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={[
+                  styles.cancelBtn,
+                  { backgroundColor: colors.cardSecondary, borderColor: colors.border },
+                ]}
                 onPress={handleClose}
                 disabled={loading}
                 activeOpacity={0.7}
               >
-                <Text style={styles.cancelBtnText}>Cancel</Text>
+                <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.saveBtn}
+                style={[styles.saveBtn, { backgroundColor: colors.gold }]}
                 onPress={handleSubmit}
                 disabled={loading}
                 activeOpacity={0.8}
@@ -234,11 +261,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: COLORS.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingBottom: 28,
   },
   sheetHeader: {
@@ -249,24 +274,20 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
   },
   sheetEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
   },
   sheetTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: COLORS.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -280,17 +301,14 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 0.8,
     marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.card,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 10,
@@ -298,7 +316,6 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.textPrimary,
   },
   footerRow: {
     flexDirection: 'row',
@@ -307,23 +324,19 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    backgroundColor: COLORS.cardLight,
     borderRadius: 14,
     paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: COLORS.border,
   },
   cancelBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   saveBtn: {
     flex: 2,
     flexDirection: 'row',
-    backgroundColor: COLORS.gold,
     borderRadius: 14,
     paddingVertical: 13,
     alignItems: 'center',

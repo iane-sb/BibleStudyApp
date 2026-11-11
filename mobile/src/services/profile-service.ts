@@ -1,6 +1,24 @@
+/**
+ * ProfileService — Persistent Profile & Settings State Manager
+ *
+ * All data is persisted to SecureStore / localStorage via StorageService.
+ * Settings survive app restarts.
+ *
+ * API Integration Roadmap (future Laravel Sanctum):
+ *   GET  /api/v1/user/profile           → getProfile()
+ *   PUT  /api/v1/user/profile           → updateProfile()
+ *   GET  /api/v1/user/preferences       → getPreferences()
+ *   PATCH /api/v1/user/preferences      → updatePreferences()
+ *   GET  /api/v1/user/notifications     → getNotifications()
+ *   PUT  /api/v1/user/notifications     → updateNotifications()
+ *   POST /api/v1/user/change-password   → changePassword()
+ *   POST /api/v1/user/update-email      → updateEmail()
+ *   POST /api/v1/auth/logout            → signOut()
+ *   DELETE /api/v1/user/account         → deleteAccount()
+ */
+
 import {
   AccountPrivacySettings,
-  AppearanceTheme,
   AvatarPreset,
   BibleStudyPreferences,
   NotificationPreferences,
@@ -8,10 +26,9 @@ import {
   UserProfile,
 } from '@/types/profile';
 
-// ============================================================================
-// MOCK DATA (Clearly isolated for offline testing / Expo Go preview)
-// In production, these calls will connect to the Laravel REST / Sanctum API.
-// ============================================================================
+import { STORAGE_KEYS, StorageService } from './storage-service';
+
+// ─── Avatar Presets (static, no API needed) ───────────────────────────────────
 
 export const AVATAR_PRESETS: AvatarPreset[] = [
   {
@@ -51,156 +68,171 @@ export const AVATAR_PRESETS: AvatarPreset[] = [
   },
   {
     id: 'heart',
-    name: 'God’s Love',
+    name: "God's Love",
     icon: 'heart-outline',
     bgColor: '#2B1C22',
     iconColor: '#E58A98',
   },
 ];
 
-const INITIAL_PROFILE: UserProfile = {
-  id: 'usr_78942',
-  name: 'Benito Ramos',
-  email: 'benito.ramos@example.com',
-  membershipStatus: 'premium',
-  memberSince: 'January 2025',
-  favoriteVerse: 'Philippians 4:13',
-  bio: 'Walking in faith, growing in grace through daily Scripture study.',
+// ─── Default Data ─────────────────────────────────────────────────────────────
+
+const DEFAULT_PROFILE: UserProfile = {
+  id: 'usr_local',
+  name: 'Your Name',
+  email: 'your.email@example.com',
+  membershipStatus: 'free',
+  memberSince: 'November 2026',
+  favoriteVerse: '',
+  bio: '',
   avatarPreset: 'cross',
+  avatarUrl: undefined,
 };
 
-const INITIAL_STATS: SpiritualJourneyStats = {
-  chaptersRead: 142,
-  readingPlansCompleted: 4,
-  currentStreakDays: 17,
-  totalBookmarkedVerses: 58,
-  totalJournalEntries: 23,
+const DEFAULT_STATS: SpiritualJourneyStats = {
+  chaptersRead: 0,
+  readingPlansCompleted: 0,
+  currentStreakDays: 0,
+  totalBookmarkedVerses: 0,
+  totalJournalEntries: 0,
 };
 
-const INITIAL_PREFERENCES: BibleStudyPreferences = {
+const DEFAULT_PREFERENCES: BibleStudyPreferences = {
   preferredTranslation: 'KJV',
   fontSize: 18,
   verseDisplayMode: 'verse-by-verse',
   showVerseNumbers: true,
   redLetterChrist: true,
-  dailyReminderEnabled: true,
+  dailyReminderEnabled: false,
   preferredReadingTime: '07:00 AM',
 };
 
-const INITIAL_NOTIFICATIONS: NotificationPreferences = {
-  dailyVerse: true,
-  readingReminders: true,
-  readingPlanReminders: true,
+const DEFAULT_NOTIFICATIONS: NotificationPreferences = {
+  dailyVerse: false,
+  readingReminders: false,
+  readingPlanReminders: false,
   prayerAndJournalReminders: false,
 };
 
-const INITIAL_PRIVACY: AccountPrivacySettings = {
+const DEFAULT_PRIVACY: AccountPrivacySettings = {
   isProfilePublic: false,
-  shareReadingStats: true,
-  showStreakPublicly: true,
+  shareReadingStats: false,
+  showStreakPublicly: false,
 };
 
-// ============================================================================
-// SERVICE STORE & OBSERVER SYSTEM
-// ============================================================================
+// ─── Observable Store ─────────────────────────────────────────────────────────
 
 type Listener = () => void;
 
 class ProfileServiceManager {
-  private profile: UserProfile = { ...INITIAL_PROFILE };
-  private stats: SpiritualJourneyStats = { ...INITIAL_STATS };
-  private preferences: BibleStudyPreferences = { ...INITIAL_PREFERENCES };
-  private appearance: AppearanceTheme = 'dark';
-  private notifications: NotificationPreferences = { ...INITIAL_NOTIFICATIONS };
-  private privacy: AccountPrivacySettings = { ...INITIAL_PRIVACY };
+  private profile: UserProfile = { ...DEFAULT_PROFILE };
+  private stats: SpiritualJourneyStats = { ...DEFAULT_STATS };
+  private preferences: BibleStudyPreferences = { ...DEFAULT_PREFERENCES };
+  private notifications: NotificationPreferences = { ...DEFAULT_NOTIFICATIONS };
+  private privacy: AccountPrivacySettings = { ...DEFAULT_PRIVACY };
   private listeners: Set<Listener> = new Set();
+  private initialized = false;
 
+  /** Subscribe to any state change. Returns unsubscribe function. */
   public subscribe(listener: Listener): () => void {
     this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
+    return () => this.listeners.delete(listener);
   }
 
   private notify() {
-    this.listeners.forEach((listener) => {
-      try {
-        listener();
-      } catch (err) {
-        console.error('Error in profile service listener:', err);
-      }
+    this.listeners.forEach((l) => {
+      try { l(); } catch (e) { console.warn('ProfileService listener error:', e); }
     });
   }
 
-  // --- Profile Methods ---
+  // ─── Initialization ───────────────────────────────────────────────────────
+
+  /** Load all persisted data. Called once on app start. */
+  public async initialize(): Promise<void> {
+    if (this.initialized) return;
+    try {
+      const [savedProfile, savedPrefs, savedNotifs, savedPrivacy] = await Promise.all([
+        StorageService.getJSON<UserProfile>(STORAGE_KEYS.PROFILE),
+        StorageService.getJSON<BibleStudyPreferences>(STORAGE_KEYS.PREFERENCES),
+        StorageService.getJSON<NotificationPreferences>(STORAGE_KEYS.NOTIFICATIONS),
+        StorageService.getJSON<AccountPrivacySettings>(STORAGE_KEYS.PRIVACY),
+      ]);
+
+      if (savedProfile) this.profile = { ...DEFAULT_PROFILE, ...savedProfile };
+      if (savedPrefs) this.preferences = { ...DEFAULT_PREFERENCES, ...savedPrefs };
+      if (savedNotifs) this.notifications = { ...DEFAULT_NOTIFICATIONS, ...savedNotifs };
+      if (savedPrivacy) this.privacy = { ...DEFAULT_PRIVACY, ...savedPrivacy };
+    } catch (err) {
+      console.warn('ProfileService: failed to load persisted data', err);
+    } finally {
+      this.initialized = true;
+    }
+  }
+
+  // ─── Profile ──────────────────────────────────────────────────────────────
+
   public async getProfile(): Promise<UserProfile> {
-    // Laravel API counterpart: GET /api/v1/user/profile
     return { ...this.profile };
   }
 
   public async updateProfile(updates: Partial<UserProfile>): Promise<UserProfile> {
-    // Laravel API counterpart: PUT /api/v1/user/profile
-    await new Promise((res) => setTimeout(res, 300));
     this.profile = { ...this.profile, ...updates };
+    await StorageService.setJSON(STORAGE_KEYS.PROFILE, this.profile);
     this.notify();
     return { ...this.profile };
   }
 
-  // --- Stats Methods ---
+  public async updateAvatarUri(localUri: string | undefined): Promise<void> {
+    this.profile = { ...this.profile, avatarUrl: localUri, avatarPreset: undefined };
+    await StorageService.setJSON(STORAGE_KEYS.PROFILE, this.profile);
+    this.notify();
+  }
+
+  // ─── Stats (read-only until API; local mock only) ─────────────────────────
+
   public async getStats(): Promise<SpiritualJourneyStats> {
-    // Laravel API counterpart: GET /api/v1/user/spiritual-stats
     return { ...this.stats };
   }
 
   public async refreshStats(): Promise<SpiritualJourneyStats> {
-    // Simulates syncing stats from the server
-    await new Promise((res) => setTimeout(res, 400));
+    // Future: GET /api/v1/user/spiritual-stats
+    await new Promise((r) => setTimeout(r, 400));
     this.notify();
     return { ...this.stats };
   }
 
-  // --- Preferences Methods ---
+  // ─── Preferences ──────────────────────────────────────────────────────────
+
   public async getPreferences(): Promise<BibleStudyPreferences> {
-    // Laravel API counterpart: GET /api/v1/user/preferences
     return { ...this.preferences };
   }
 
   public async updatePreferences(
     updates: Partial<BibleStudyPreferences>
   ): Promise<BibleStudyPreferences> {
-    // Laravel API counterpart: PATCH /api/v1/user/preferences
     this.preferences = { ...this.preferences, ...updates };
+    await StorageService.setJSON(STORAGE_KEYS.PREFERENCES, this.preferences);
     this.notify();
     return { ...this.preferences };
   }
 
-  // --- Appearance Methods ---
-  public getAppearance(): AppearanceTheme {
-    return this.appearance;
-  }
+  // ─── Notifications ────────────────────────────────────────────────────────
 
-  public async updateAppearance(theme: AppearanceTheme): Promise<AppearanceTheme> {
-    this.appearance = theme;
-    this.notify();
-    return this.appearance;
-  }
-
-  // --- Notification Methods ---
   public async getNotifications(): Promise<NotificationPreferences> {
-    // Laravel API counterpart: GET /api/v1/user/notifications/settings
     return { ...this.notifications };
   }
 
   public async updateNotifications(
     updates: Partial<NotificationPreferences>
   ): Promise<NotificationPreferences> {
-    // Laravel API counterpart: PUT /api/v1/user/notifications/settings
     this.notifications = { ...this.notifications, ...updates };
+    await StorageService.setJSON(STORAGE_KEYS.NOTIFICATIONS, this.notifications);
     this.notify();
     return { ...this.notifications };
   }
 
-  // --- Privacy Methods ---
+  // ─── Privacy ──────────────────────────────────────────────────────────────
+
   public async getPrivacy(): Promise<AccountPrivacySettings> {
     return { ...this.privacy };
   }
@@ -209,47 +241,56 @@ class ProfileServiceManager {
     updates: Partial<AccountPrivacySettings>
   ): Promise<AccountPrivacySettings> {
     this.privacy = { ...this.privacy, ...updates };
+    await StorageService.setJSON(STORAGE_KEYS.PRIVACY, this.privacy);
     this.notify();
     return { ...this.privacy };
   }
 
-  // --- Security & Account Management ---
-  public async changePassword(currentPass: string, newPass: string): Promise<boolean> {
-    // Laravel API counterpart: POST /api/v1/user/change-password
-    await new Promise((res) => setTimeout(res, 500));
-    if (!currentPass || !newPass) {
-      throw new Error('Please enter both your current and new password.');
-    }
-    if (newPass.length < 8) {
-      throw new Error('New password must be at least 8 characters long.');
-    }
-    return true;
+  // ─── Security ─────────────────────────────────────────────────────────────
+
+  public async changePassword(currentPass: string, newPass: string): Promise<void> {
+    // Future: POST /api/v1/user/change-password
+    await new Promise((r) => setTimeout(r, 600));
+    if (!currentPass) throw new Error('Current password is required.');
+    if (newPass.length < 8) throw new Error('New password must be at least 8 characters.');
+    // Password validation only — not stored locally (never store passwords)
   }
 
-  public async updateEmail(newEmail: string): Promise<boolean> {
-    // Laravel API counterpart: POST /api/v1/user/update-email
-    await new Promise((res) => setTimeout(res, 400));
+  public async updateEmail(newEmail: string): Promise<void> {
+    // Future: POST /api/v1/user/update-email
+    await new Promise((r) => setTimeout(r, 400));
     if (!newEmail || !newEmail.includes('@')) {
-      throw new Error('Please provide a valid email address.');
+      throw new Error('Please enter a valid email address.');
     }
-    this.profile.email = newEmail.trim();
+    this.profile = { ...this.profile, email: newEmail.trim() };
+    await StorageService.setJSON(STORAGE_KEYS.PROFILE, this.profile);
     this.notify();
-    return true;
   }
 
-  public async signOut(): Promise<boolean> {
-    // Laravel API counterpart: POST /api/v1/auth/logout
-    await new Promise((res) => setTimeout(res, 300));
-    return true;
+  // ─── Session ──────────────────────────────────────────────────────────────
+
+  public async signOut(): Promise<void> {
+    // Future: POST /api/v1/auth/logout + clear auth tokens
+    await new Promise((r) => setTimeout(r, 300));
+    // Currently no auth tokens to clear — navigate to login when auth is added
   }
 
-  public async deleteAccount(): Promise<boolean> {
-    // Laravel API counterpart: DELETE /api/v1/user/account
-    await new Promise((res) => setTimeout(res, 600));
-    this.profile = { ...INITIAL_PROFILE };
-    this.stats = { ...INITIAL_STATS };
+  public async deleteAccount(): Promise<void> {
+    // Future: DELETE /api/v1/user/account + clear all local data
+    await new Promise((r) => setTimeout(r, 600));
+    // Clear all stored data
+    await Promise.all([
+      StorageService.remove(STORAGE_KEYS.PROFILE),
+      StorageService.remove(STORAGE_KEYS.PREFERENCES),
+      StorageService.remove(STORAGE_KEYS.NOTIFICATIONS),
+      StorageService.remove(STORAGE_KEYS.PRIVACY),
+      StorageService.remove(STORAGE_KEYS.AVATAR_URI),
+    ]);
+    this.profile = { ...DEFAULT_PROFILE };
+    this.preferences = { ...DEFAULT_PREFERENCES };
+    this.notifications = { ...DEFAULT_NOTIFICATIONS };
+    this.privacy = { ...DEFAULT_PRIVACY };
     this.notify();
-    return true;
   }
 }
 

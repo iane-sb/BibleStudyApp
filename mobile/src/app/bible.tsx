@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BibleService, TRANSLATIONS } from '@/services/bible-service';
+import { ProfileService } from '@/services/profile-service';
 import { BibleBook, Testament, TranslationCode } from '@/types/bible';
 
 const COLORS = {
@@ -71,6 +72,20 @@ export default function BibleScreen() {
       }
     }
   }, [params.book, params.chapter, params.translation]);
+
+  // Load saved Bible study preferences if not overridden by navigation params
+  useEffect(() => {
+    ProfileService.getPreferences()
+      .then((prefs) => {
+        if (!params.translation && prefs.preferredTranslation) {
+          setTranslation(prefs.preferredTranslation);
+        }
+        if (prefs.fontSize) {
+          setFontSize(prefs.fontSize);
+        }
+      })
+      .catch(console.warn);
+  }, [params.translation]);
 
   // Reset scroll to top when chapter or book or translation changes
   useEffect(() => {

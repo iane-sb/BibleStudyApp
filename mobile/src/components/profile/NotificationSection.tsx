@@ -1,18 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 
+import { useAppTheme } from '@/contexts/ThemeContext';
 import { NotificationPreferences } from '@/types/profile';
-
-const COLORS = {
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
 
 interface NotificationSectionProps {
   notifications: NotificationPreferences;
@@ -23,6 +13,8 @@ export function NotificationSection({
   notifications,
   onUpdate,
 }: NotificationSectionProps) {
+  const { colors } = useAppTheme();
+
   const items: {
     key: keyof NotificationPreferences;
     title: string;
@@ -58,35 +50,53 @@ export function NotificationSection({
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>✦ NOTIFICATIONS</Text>
-        <Text style={styles.sectionTitle}>Reminders & Alerts</Text>
+        <Text style={[styles.sectionEyebrow, { color: colors.gold }]}>✦ NOTIFICATIONS</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Reminders & Alerts</Text>
       </View>
 
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         {items.map((item, index) => {
           const isEnabled = notifications[item.key];
           return (
             <View key={item.key}>
-              {index > 0 && <View style={styles.divider} />}
+              {index > 0 && (
+                <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
+              )}
               <View style={styles.row}>
-                <View style={styles.iconCircle}>
+                <View
+                  style={[
+                    styles.iconCircle,
+                    {
+                      backgroundColor: isEnabled ? colors.goldMuted : colors.cardSecondary,
+                    },
+                  ]}
+                >
                   <Ionicons
                     name={item.icon as any}
                     size={18}
-                    color={isEnabled ? COLORS.gold : COLORS.textSecondary}
+                    color={isEnabled ? colors.gold : colors.textSecondary}
                   />
                 </View>
 
                 <View style={styles.labelCol}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemSubtitle}>{item.subtitle}</Text>
+                  <Text style={[styles.itemTitle, { color: colors.textPrimary }]}>
+                    {item.title}
+                  </Text>
+                  <Text style={[styles.itemSubtitle, { color: colors.textSecondary }]}>
+                    {item.subtitle}
+                  </Text>
                 </View>
 
                 <Switch
                   value={isEnabled}
                   onValueChange={(val) => onUpdate({ [item.key]: val })}
-                  trackColor={{ false: '#262D3D', true: COLORS.goldDark }}
-                  thumbColor={isEnabled ? COLORS.gold : '#9296A3'}
+                  trackColor={{ false: colors.cardSecondary, true: colors.goldDark }}
+                  thumbColor={isEnabled ? colors.gold : colors.textSecondary}
                 />
               </View>
             </View>
@@ -107,20 +117,16 @@ const styles = StyleSheet.create({
   sectionEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
     marginBottom: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   card: {
-    backgroundColor: COLORS.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 14,
   },
   row: {
@@ -133,7 +139,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -143,16 +148,13 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textPrimary,
   },
   itemSubtitle: {
     fontSize: 11,
-    color: COLORS.textSecondary,
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     marginVertical: 4,
   },
 });

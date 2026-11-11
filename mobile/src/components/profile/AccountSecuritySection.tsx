@@ -9,20 +9,8 @@ import {
   View,
 } from 'react-native';
 
+import { useAppTheme } from '@/contexts/ThemeContext';
 import { AccountPrivacySettings } from '@/types/profile';
-
-const COLORS = {
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-  danger: '#EF4444',
-  dangerMuted: 'rgba(239, 68, 68, 0.12)',
-};
 
 interface AccountSecuritySectionProps {
   email: string;
@@ -45,6 +33,7 @@ export function AccountSecuritySection({
   onSignOut,
   onDeleteAccount,
 }: AccountSecuritySectionProps) {
+  const { colors } = useAppTheme();
   const [privacyExpanded, setPrivacyExpanded] = useState<boolean>(false);
 
   const confirmSignOut = () => {
@@ -72,7 +61,6 @@ export function AccountSecuritySection({
           text: 'Permanently Delete',
           style: 'destructive',
           onPress: () => {
-            // Second confirmation step for safety
             Alert.alert(
               'Final Confirmation',
               'Please confirm once more: All your Bible study history will be permanently erased.',
@@ -94,28 +82,41 @@ export function AccountSecuritySection({
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>✦ SECURITY & CREDENTIALS</Text>
-        <Text style={styles.sectionTitle}>Account & Security</Text>
+        <Text style={[styles.sectionEyebrow, { color: colors.gold }]}>
+          ✦ SECURITY & CREDENTIALS
+        </Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          Account & Security
+        </Text>
       </View>
 
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         {/* Edit Personal Info */}
         <TouchableOpacity
           style={styles.actionRow}
           onPress={onEditProfile}
           activeOpacity={0.7}
         >
-          <View style={styles.iconCircle}>
-            <Ionicons name="person-outline" size={18} color={COLORS.gold} />
+          <View style={[styles.iconCircle, { backgroundColor: colors.cardSecondary }]}>
+            <Ionicons name="person-outline" size={18} color={colors.gold} />
           </View>
           <View style={styles.labelCol}>
-            <Text style={styles.rowTitle}>Personal Information</Text>
-            <Text style={styles.rowSubtitle}>Name, bio, and favorite verse</Text>
+            <Text style={[styles.rowTitle, { color: colors.textPrimary }]}>
+              Personal Information
+            </Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
+              Name, bio, and favorite verse
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={COLORS.textSecondary} />
+          <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Email Management */}
         <TouchableOpacity
@@ -123,19 +124,21 @@ export function AccountSecuritySection({
           onPress={onManageEmail}
           activeOpacity={0.7}
         >
-          <View style={styles.iconCircle}>
-            <Ionicons name="mail-outline" size={18} color={COLORS.gold} />
+          <View style={[styles.iconCircle, { backgroundColor: colors.cardSecondary }]}>
+            <Ionicons name="mail-outline" size={18} color={colors.gold} />
           </View>
           <View style={styles.labelCol}>
-            <Text style={styles.rowTitle}>Email Address</Text>
-            <Text style={styles.rowSubtitle} numberOfLines={1}>
+            <Text style={[styles.rowTitle, { color: colors.textPrimary }]}>
+              Email Address
+            </Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]} numberOfLines={1}>
               {email}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={COLORS.textSecondary} />
+          <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Change Password */}
         <TouchableOpacity
@@ -143,17 +146,21 @@ export function AccountSecuritySection({
           onPress={onChangePassword}
           activeOpacity={0.7}
         >
-          <View style={styles.iconCircle}>
-            <Ionicons name="lock-closed-outline" size={18} color={COLORS.gold} />
+          <View style={[styles.iconCircle, { backgroundColor: colors.cardSecondary }]}>
+            <Ionicons name="lock-closed-outline" size={18} color={colors.gold} />
           </View>
           <View style={styles.labelCol}>
-            <Text style={styles.rowTitle}>Change Password</Text>
-            <Text style={styles.rowSubtitle}>Update your sign-in password</Text>
+            <Text style={[styles.rowTitle, { color: colors.textPrimary }]}>
+              Change Password
+            </Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
+              Update your sign-in password
+            </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={COLORS.textSecondary} />
+          <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Account Privacy Toggle / Expandable */}
         <TouchableOpacity
@@ -161,76 +168,88 @@ export function AccountSecuritySection({
           onPress={() => setPrivacyExpanded((prev) => !prev)}
           activeOpacity={0.7}
         >
-          <View style={styles.iconCircle}>
-            <Ionicons name="shield-outline" size={18} color={COLORS.gold} />
+          <View style={[styles.iconCircle, { backgroundColor: colors.cardSecondary }]}>
+            <Ionicons name="shield-outline" size={18} color={colors.gold} />
           </View>
           <View style={styles.labelCol}>
-            <Text style={styles.rowTitle}>Account Privacy</Text>
-            <Text style={styles.rowSubtitle}>
+            <Text style={[styles.rowTitle, { color: colors.textPrimary }]}>
+              Account Privacy
+            </Text>
+            <Text style={[styles.rowSubtitle, { color: colors.textSecondary }]}>
               Manage public streak and study visibility
             </Text>
           </View>
           <Ionicons
             name={privacyExpanded ? 'chevron-up' : 'chevron-down'}
             size={16}
-            color={COLORS.textSecondary}
+            color={colors.textSecondary}
           />
         </TouchableOpacity>
 
         {privacyExpanded && (
-          <View style={styles.privacyDropdown}>
+          <View style={[styles.privacyDropdown, { backgroundColor: colors.cardSecondary }]}>
             <View style={styles.subSwitchRow}>
               <View style={styles.subSwitchCol}>
-                <Text style={styles.subSwitchTitle}>Public Profile</Text>
-                <Text style={styles.subSwitchDesc}>
+                <Text style={[styles.subSwitchTitle, { color: colors.textPrimary }]}>
+                  Public Profile
+                </Text>
+                <Text style={[styles.subSwitchDesc, { color: colors.textSecondary }]}>
                   Allow other community members to view your name
                 </Text>
               </View>
               <Switch
                 value={privacy.isProfilePublic}
                 onValueChange={(val) => onUpdatePrivacy({ isProfilePublic: val })}
-                trackColor={{ false: '#262D3D', true: COLORS.goldDark }}
-                thumbColor={privacy.isProfilePublic ? COLORS.gold : '#9296A3'}
+                trackColor={{ false: colors.card, true: colors.goldDark }}
+                thumbColor={privacy.isProfilePublic ? colors.gold : colors.textSecondary}
               />
             </View>
 
             <View style={styles.subSwitchRow}>
               <View style={styles.subSwitchCol}>
-                <Text style={styles.subSwitchTitle}>Share Reading Streak</Text>
-                <Text style={styles.subSwitchDesc}>
+                <Text style={[styles.subSwitchTitle, { color: colors.textPrimary }]}>
+                  Share Reading Streak
+                </Text>
+                <Text style={[styles.subSwitchDesc, { color: colors.textSecondary }]}>
                   Show your consecutive reading days to encourage peers
                 </Text>
               </View>
               <Switch
                 value={privacy.showStreakPublicly}
                 onValueChange={(val) => onUpdatePrivacy({ showStreakPublicly: val })}
-                trackColor={{ false: '#262D3D', true: COLORS.goldDark }}
-                thumbColor={privacy.showStreakPublicly ? COLORS.gold : '#9296A3'}
+                trackColor={{ false: colors.card, true: colors.goldDark }}
+                thumbColor={privacy.showStreakPublicly ? colors.gold : colors.textSecondary}
               />
             </View>
           </View>
         )}
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Sign Out Button */}
         <TouchableOpacity
-          style={styles.signOutButton}
+          style={[
+            styles.signOutButton,
+            { backgroundColor: colors.goldMuted, borderColor: `${colors.gold}44` },
+          ]}
           onPress={confirmSignOut}
           activeOpacity={0.7}
         >
-          <Ionicons name="log-out-outline" size={18} color={COLORS.gold} />
-          <Text style={styles.signOutText}>Sign Out</Text>
+          <Ionicons name="log-out-outline" size={18} color={colors.gold} />
+          <Text style={[styles.signOutText, { color: colors.gold }]}>Sign Out</Text>
         </TouchableOpacity>
 
         {/* Delete Account */}
         <TouchableOpacity
-          style={styles.deleteButton}
+          style={[
+            styles.deleteButton,
+            { backgroundColor: colors.dangerMuted, borderColor: `${colors.danger}44` },
+          ]}
           onPress={confirmDeleteAccount}
           activeOpacity={0.7}
         >
-          <Ionicons name="trash-outline" size={16} color={COLORS.danger} />
-          <Text style={styles.deleteText}>Delete Account</Text>
+          <Ionicons name="trash-outline" size={16} color={colors.danger} />
+          <Text style={[styles.deleteText, { color: colors.danger }]}>Delete Account</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -247,20 +266,16 @@ const styles = StyleSheet.create({
   sectionEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
     marginBottom: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   card: {
-    backgroundColor: COLORS.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 14,
   },
   actionRow: {
@@ -273,7 +288,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: COLORS.cardLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -283,20 +297,16 @@ const styles = StyleSheet.create({
   rowTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textPrimary,
   },
   rowSubtitle: {
     fontSize: 11,
-    color: COLORS.textSecondary,
     marginTop: 2,
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     marginVertical: 4,
   },
   privacyDropdown: {
-    backgroundColor: COLORS.cardLight,
     borderRadius: 12,
     padding: 12,
     marginVertical: 8,
@@ -314,20 +324,16 @@ const styles = StyleSheet.create({
   subSwitchTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.textPrimary,
   },
   subSwitchDesc: {
     fontSize: 11,
-    color: COLORS.textSecondary,
     marginTop: 2,
   },
   signOutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(216, 181, 109, 0.08)',
     borderWidth: 1,
-    borderColor: 'rgba(216, 181, 109, 0.3)',
     borderRadius: 12,
     paddingVertical: 11,
     marginTop: 10,
@@ -336,15 +342,12 @@ const styles = StyleSheet.create({
   signOutText: {
     fontSize: 13,
     fontWeight: '700',
-    color: COLORS.gold,
   },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.dangerMuted,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.25)',
     borderRadius: 12,
     paddingVertical: 10,
     marginTop: 10,
@@ -353,6 +356,5 @@ const styles = StyleSheet.create({
   deleteText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.danger,
   },
 });

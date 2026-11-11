@@ -2,24 +2,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 
+import { useAppTheme } from '@/contexts/ThemeContext';
 import { TRANSLATIONS } from '@/services/bible-service';
 import { TranslationCode } from '@/types/bible';
 import { BibleStudyPreferences, VerseDisplayMode } from '@/types/profile';
 
-const COLORS = {
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-  redLetter: '#E06D6D',
-};
-
 const FONT_SIZES = [14, 16, 18, 20, 22];
-
 const COMMON_TIMES = ['06:00 AM', '07:00 AM', '08:00 AM', '12:00 PM', '09:00 PM'];
 
 interface StudyPreferencesSectionProps {
@@ -31,24 +19,36 @@ export function StudyPreferencesSection({
   preferences,
   onUpdate,
 }: StudyPreferencesSectionProps) {
+  const { colors } = useAppTheme();
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
 
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionEyebrow}>✦ SCRIPTURE SETTINGS</Text>
-        <Text style={styles.sectionTitle}>Bible Study Preferences</Text>
+        <Text style={[styles.sectionEyebrow, { color: colors.gold }]}>✦ SCRIPTURE SETTINGS</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          Bible Study Preferences
+        </Text>
       </View>
 
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
         {/* Preferred Translation */}
         <View style={styles.settingItem}>
           <View style={styles.settingHeader}>
             <View style={styles.iconTitleRow}>
-              <Ionicons name="book-outline" size={18} color={COLORS.gold} />
-              <Text style={styles.settingTitle}>Default Translation</Text>
+              <Ionicons name="book-outline" size={18} color={colors.gold} />
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                Default Translation
+              </Text>
             </View>
-            <Text style={styles.settingHint}>Active in Reader</Text>
+            <Text style={[styles.settingHint, { color: colors.textSecondary }]}>
+              Active in Reader
+            </Text>
           </View>
 
           <View style={styles.translationsRow}>
@@ -59,7 +59,10 @@ export function StudyPreferencesSection({
                   key={t.code}
                   style={[
                     styles.translationChip,
-                    isSelected && styles.translationChipSelected,
+                    {
+                      backgroundColor: isSelected ? colors.goldMuted : colors.cardSecondary,
+                      borderColor: isSelected ? colors.gold : colors.border,
+                    },
                   ]}
                   onPress={() =>
                     onUpdate({ preferredTranslation: t.code as TranslationCode })
@@ -69,6 +72,7 @@ export function StudyPreferencesSection({
                   <Text
                     style={[
                       styles.translationChipText,
+                      { color: isSelected ? colors.gold : colors.textSecondary },
                       isSelected && styles.translationChipTextSelected,
                     ]}
                   >
@@ -80,16 +84,25 @@ export function StudyPreferencesSection({
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Font Size & Live Preview */}
         <View style={styles.settingItem}>
           <View style={styles.settingHeader}>
             <View style={styles.iconTitleRow}>
-              <Ionicons name="text-outline" size={18} color={COLORS.gold} />
-              <Text style={styles.settingTitle}>Reader Font Size</Text>
+              <Ionicons name="text-outline" size={18} color={colors.gold} />
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                Reader Font Size
+              </Text>
             </View>
-            <Text style={styles.settingValueBadge}>{preferences.fontSize} pt</Text>
+            <Text
+              style={[
+                styles.settingValueBadge,
+                { backgroundColor: colors.goldMuted, color: colors.gold },
+              ]}
+            >
+              {preferences.fontSize} pt
+            </Text>
           </View>
 
           <View style={styles.fontSizeSelectorRow}>
@@ -100,7 +113,10 @@ export function StudyPreferencesSection({
                   key={size}
                   style={[
                     styles.sizePill,
-                    isSelected && styles.sizePillSelected,
+                    {
+                      backgroundColor: isSelected ? colors.goldMuted : colors.cardSecondary,
+                      borderColor: isSelected ? colors.gold : colors.border,
+                    },
                   ]}
                   onPress={() => onUpdate({ fontSize: size })}
                   activeOpacity={0.7}
@@ -108,6 +124,7 @@ export function StudyPreferencesSection({
                   <Text
                     style={[
                       styles.sizePillText,
+                      { color: isSelected ? colors.gold : colors.textSecondary },
                       isSelected && styles.sizePillTextSelected,
                     ]}
                   >
@@ -119,19 +136,29 @@ export function StudyPreferencesSection({
           </View>
 
           {/* Live Scripture Preview */}
-          <View style={styles.previewBox}>
-            <Text style={styles.previewLabel}>LIVE PREVIEW</Text>
+          <View
+            style={[
+              styles.previewBox,
+              { backgroundColor: colors.cardSecondary, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.previewLabel, { color: colors.textSecondary }]}>
+              LIVE PREVIEW
+            </Text>
             <Text
               style={[
                 styles.previewText,
                 {
+                  color: colors.textPrimary,
                   fontSize: preferences.fontSize,
                   lineHeight: Math.round(preferences.fontSize * 1.55),
                 },
               ]}
             >
               {preferences.showVerseNumbers ? (
-                <Text style={styles.previewVerseNum}>16 </Text>
+                <Text style={{ color: colors.gold, fontWeight: '700', fontSize: 11 }}>
+                  16{' '}
+                </Text>
               ) : null}
               For God so loved the world, that he gave his only begotten Son, that
               whosoever believeth in him should not perish, but have everlasting life.
@@ -139,23 +166,27 @@ export function StudyPreferencesSection({
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Verse Display Mode */}
         <View style={styles.settingItem}>
           <View style={styles.settingHeader}>
             <View style={styles.iconTitleRow}>
-              <Ionicons name="layers-outline" size={18} color={COLORS.gold} />
-              <Text style={styles.settingTitle}>Reading Layout</Text>
+              <Ionicons name="layers-outline" size={18} color={colors.gold} />
+              <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>
+                Reading Layout
+              </Text>
             </View>
           </View>
 
-          <View style={styles.segmentedControl}>
+          <View style={[styles.segmentedControl, { backgroundColor: colors.cardSecondary }]}>
             <TouchableOpacity
               style={[
                 styles.segmentButton,
-                preferences.verseDisplayMode === 'verse-by-verse' &&
+                preferences.verseDisplayMode === 'verse-by-verse' && [
                   styles.segmentButtonActive,
+                  { backgroundColor: colors.card, borderColor: `${colors.gold}66` },
+                ],
               ]}
               onPress={() =>
                 onUpdate({ verseDisplayMode: 'verse-by-verse' as VerseDisplayMode })
@@ -167,13 +198,19 @@ export function StudyPreferencesSection({
                 size={14}
                 color={
                   preferences.verseDisplayMode === 'verse-by-verse'
-                    ? COLORS.gold
-                    : COLORS.textSecondary
+                    ? colors.gold
+                    : colors.textSecondary
                 }
               />
               <Text
                 style={[
                   styles.segmentButtonText,
+                  {
+                    color:
+                      preferences.verseDisplayMode === 'verse-by-verse'
+                        ? colors.gold
+                        : colors.textSecondary,
+                  },
                   preferences.verseDisplayMode === 'verse-by-verse' &&
                     styles.segmentButtonTextActive,
                 ]}
@@ -185,8 +222,10 @@ export function StudyPreferencesSection({
             <TouchableOpacity
               style={[
                 styles.segmentButton,
-                preferences.verseDisplayMode === 'paragraph' &&
+                preferences.verseDisplayMode === 'paragraph' && [
                   styles.segmentButtonActive,
+                  { backgroundColor: colors.card, borderColor: `${colors.gold}66` },
+                ],
               ]}
               onPress={() =>
                 onUpdate({ verseDisplayMode: 'paragraph' as VerseDisplayMode })
@@ -198,13 +237,19 @@ export function StudyPreferencesSection({
                 size={14}
                 color={
                   preferences.verseDisplayMode === 'paragraph'
-                    ? COLORS.gold
-                    : COLORS.textSecondary
+                    ? colors.gold
+                    : colors.textSecondary
                 }
               />
               <Text
                 style={[
                   styles.segmentButtonText,
+                  {
+                    color:
+                      preferences.verseDisplayMode === 'paragraph'
+                        ? colors.gold
+                        : colors.textSecondary,
+                  },
                   preferences.verseDisplayMode === 'paragraph' &&
                     styles.segmentButtonTextActive,
                 ]}
@@ -215,85 +260,96 @@ export function StudyPreferencesSection({
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Show Verse Numbers Switch */}
         <View style={styles.switchRow}>
           <View style={styles.switchLabelCol}>
-            <Text style={styles.switchLabel}>Show Verse Numbers</Text>
-            <Text style={styles.switchSubLabel}>
+            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
+              Show Verse Numbers
+            </Text>
+            <Text style={[styles.switchSubLabel, { color: colors.textSecondary }]}>
               Display superscript indices before verses
             </Text>
           </View>
           <Switch
             value={preferences.showVerseNumbers}
             onValueChange={(val) => onUpdate({ showVerseNumbers: val })}
-            trackColor={{ false: '#262D3D', true: COLORS.goldDark }}
-            thumbColor={preferences.showVerseNumbers ? COLORS.gold : '#9296A3'}
+            trackColor={{ false: colors.cardSecondary, true: colors.goldDark }}
+            thumbColor={preferences.showVerseNumbers ? colors.gold : colors.textSecondary}
           />
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Words of Christ in Red */}
         <View style={styles.switchRow}>
           <View style={styles.switchLabelCol}>
             <View style={styles.redLabelRow}>
-              <Text style={styles.switchLabel}>Words of Christ</Text>
-              <View style={styles.redPill}>
-                <Text style={styles.redPillText}>Red Letter</Text>
+              <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
+                Words of Christ
+              </Text>
+              <View style={[styles.redPill, { backgroundColor: `${colors.danger}22` }]}>
+                <Text style={[styles.redPillText, { color: colors.danger }]}>Red Letter</Text>
               </View>
             </View>
-            <Text style={styles.switchSubLabel}>
+            <Text style={[styles.switchSubLabel, { color: colors.textSecondary }]}>
               Highlight Jesus' spoken words in Gospels
             </Text>
           </View>
           <Switch
             value={preferences.redLetterChrist}
             onValueChange={(val) => onUpdate({ redLetterChrist: val })}
-            trackColor={{ false: '#262D3D', true: 'rgba(224, 109, 109, 0.6)' }}
-            thumbColor={preferences.redLetterChrist ? COLORS.redLetter : '#9296A3'}
+            trackColor={{ false: colors.cardSecondary, true: `${colors.danger}88` }}
+            thumbColor={preferences.redLetterChrist ? colors.danger : colors.textSecondary}
           />
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: colors.borderMuted }]} />
 
         {/* Daily Reading Reminder */}
         <View style={styles.switchRow}>
           <View style={styles.switchLabelCol}>
-            <Text style={styles.switchLabel}>Daily Reading Reminder</Text>
-            <Text style={styles.switchSubLabel}>
+            <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>
+              Daily Reading Reminder
+            </Text>
+            <Text style={[styles.switchSubLabel, { color: colors.textSecondary }]}>
               Gentle notification for your daily quiet time
             </Text>
           </View>
           <Switch
             value={preferences.dailyReminderEnabled}
             onValueChange={(val) => onUpdate({ dailyReminderEnabled: val })}
-            trackColor={{ false: '#262D3D', true: COLORS.goldDark }}
-            thumbColor={preferences.dailyReminderEnabled ? COLORS.gold : '#9296A3'}
+            trackColor={{ false: colors.cardSecondary, true: colors.goldDark }}
+            thumbColor={preferences.dailyReminderEnabled ? colors.gold : colors.textSecondary}
           />
         </View>
 
         {/* Preferred Reading Time Picker */}
         {preferences.dailyReminderEnabled && (
-          <View style={styles.timeSettingRow}>
+          <View style={[styles.timeSettingRow, { borderTopColor: colors.borderMuted }]}>
             <View style={styles.timeTopRow}>
               <View style={styles.iconTitleRow}>
-                <Ionicons name="time-outline" size={16} color={COLORS.gold} />
-                <Text style={styles.timeLabel}>Preferred Reading Time</Text>
+                <Ionicons name="time-outline" size={16} color={colors.gold} />
+                <Text style={[styles.timeLabel, { color: colors.textPrimary }]}>
+                  Preferred Reading Time
+                </Text>
               </View>
               <TouchableOpacity
                 onPress={() => setShowTimePicker((prev) => !prev)}
-                style={styles.timeBadge}
+                style={[
+                  styles.timeBadge,
+                  { backgroundColor: colors.goldMuted, borderColor: `${colors.gold}55` },
+                ]}
                 activeOpacity={0.7}
               >
-                <Text style={styles.timeBadgeText}>
+                <Text style={[styles.timeBadgeText, { color: colors.gold }]}>
                   {preferences.preferredReadingTime}
                 </Text>
                 <Ionicons
                   name={showTimePicker ? 'chevron-up' : 'chevron-down'}
                   size={12}
-                  color={COLORS.gold}
+                  color={colors.gold}
                 />
               </TouchableOpacity>
             </View>
@@ -307,7 +363,10 @@ export function StudyPreferencesSection({
                       key={time}
                       style={[
                         styles.timeOptionPill,
-                        isCurrent && styles.timeOptionPillSelected,
+                        {
+                          backgroundColor: isCurrent ? colors.goldMuted : colors.cardSecondary,
+                          borderColor: isCurrent ? colors.gold : colors.border,
+                        },
                       ]}
                       onPress={() => {
                         onUpdate({ preferredReadingTime: time });
@@ -317,7 +376,8 @@ export function StudyPreferencesSection({
                       <Text
                         style={[
                           styles.timeOptionText,
-                          isCurrent && styles.timeOptionTextSelected,
+                          { color: isCurrent ? colors.gold : colors.textSecondary },
+                          isCurrent && { fontWeight: '700' },
                         ]}
                       >
                         {time}
@@ -344,20 +404,16 @@ const styles = StyleSheet.create({
   sectionEyebrow: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
     letterSpacing: 1,
     marginBottom: 2,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: COLORS.textPrimary,
   },
   card: {
-    backgroundColor: COLORS.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: COLORS.border,
     padding: 16,
   },
   settingItem: {
@@ -377,17 +433,13 @@ const styles = StyleSheet.create({
   settingTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textPrimary,
   },
   settingHint: {
     fontSize: 11,
-    color: COLORS.textSecondary,
   },
   settingValueBadge: {
     fontSize: 11,
     fontWeight: '700',
-    color: COLORS.gold,
-    backgroundColor: COLORS.goldMuted,
     paddingHorizontal: 7,
     paddingVertical: 3,
     borderRadius: 8,
@@ -400,25 +452,17 @@ const styles = StyleSheet.create({
   translationChip: {
     flex: 1,
     minWidth: 65,
-    backgroundColor: COLORS.cardLight,
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 12,
     paddingVertical: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  translationChipSelected: {
-    backgroundColor: COLORS.goldMuted,
-    borderColor: COLORS.gold,
-  },
   translationChipText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   translationChipTextSelected: {
-    color: COLORS.gold,
     fontWeight: '700',
   },
   fontSizeSelectorRow: {
@@ -428,52 +472,34 @@ const styles = StyleSheet.create({
   },
   sizePill: {
     flex: 1,
-    backgroundColor: COLORS.cardLight,
     borderWidth: 1,
-    borderColor: COLORS.border,
     borderRadius: 10,
     paddingVertical: 8,
     alignItems: 'center',
   },
-  sizePillSelected: {
-    backgroundColor: COLORS.goldMuted,
-    borderColor: COLORS.gold,
-  },
   sizePillText: {
     fontSize: 12,
     fontWeight: '600',
-    color: COLORS.textSecondary,
   },
   sizePillTextSelected: {
-    color: COLORS.gold,
     fontWeight: '700',
   },
   previewBox: {
-    backgroundColor: COLORS.cardLight,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   previewLabel: {
     fontSize: 9,
     fontWeight: '700',
-    color: COLORS.textSecondary,
     letterSpacing: 0.8,
     marginBottom: 6,
   },
   previewText: {
-    color: COLORS.textPrimary,
     fontFamily: 'serif',
-  },
-  previewVerseNum: {
-    color: COLORS.gold,
-    fontWeight: '700',
-    fontSize: 11,
   },
   segmentedControl: {
     flexDirection: 'row',
-    backgroundColor: COLORS.cardLight,
     borderRadius: 12,
     padding: 4,
     gap: 4,
@@ -488,22 +514,17 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   segmentButtonActive: {
-    backgroundColor: COLORS.card,
     borderWidth: 1,
-    borderColor: 'rgba(216, 181, 109, 0.35)',
   },
   segmentButtonText: {
     fontSize: 12,
     fontWeight: '500',
-    color: COLORS.textSecondary,
   },
   segmentButtonTextActive: {
     fontWeight: '700',
-    color: COLORS.gold,
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.border,
     marginVertical: 14,
   },
   switchRow: {
@@ -518,11 +539,9 @@ const styles = StyleSheet.create({
   switchLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: COLORS.textPrimary,
   },
   switchSubLabel: {
     fontSize: 12,
-    color: COLORS.textSecondary,
     marginTop: 2,
   },
   redLabelRow: {
@@ -531,7 +550,6 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   redPill: {
-    backgroundColor: 'rgba(224, 109, 109, 0.15)',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
@@ -539,13 +557,11 @@ const styles = StyleSheet.create({
   redPillText: {
     fontSize: 9,
     fontWeight: '700',
-    color: COLORS.redLetter,
   },
   timeSettingRow: {
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   timeTopRow: {
     flexDirection: 'row',
@@ -555,14 +571,11 @@ const styles = StyleSheet.create({
   timeLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: COLORS.textPrimary,
   },
   timeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.goldMuted,
     borderWidth: 1,
-    borderColor: 'rgba(216, 181, 109, 0.35)',
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 10,
@@ -571,7 +584,6 @@ const styles = StyleSheet.create({
   timeBadgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: COLORS.gold,
   },
   timeOptionsContainer: {
     flexDirection: 'row',
@@ -580,24 +592,13 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   timeOptionPill: {
-    backgroundColor: COLORS.cardLight,
     borderWidth: 1,
-    borderColor: COLORS.border,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 10,
   },
-  timeOptionPillSelected: {
-    backgroundColor: COLORS.goldMuted,
-    borderColor: COLORS.gold,
-  },
   timeOptionText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
     fontWeight: '500',
-  },
-  timeOptionTextSelected: {
-    color: COLORS.gold,
-    fontWeight: '700',
   },
 });

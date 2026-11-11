@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { ProfileService } from '@/services/profile-service';
 import {
   AccountPrivacySettings,
-  AppearanceTheme,
   BibleStudyPreferences,
   NotificationPreferences,
   SpiritualJourneyStats,
@@ -14,7 +13,6 @@ export function useProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<SpiritualJourneyStats | null>(null);
   const [preferences, setPreferences] = useState<BibleStudyPreferences | null>(null);
-  const [appearance, setAppearance] = useState<AppearanceTheme>('dark');
   const [notifications, setNotifications] = useState<NotificationPreferences | null>(null);
   const [privacy, setPrivacy] = useState<AccountPrivacySettings | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -31,7 +29,6 @@ export function useProfile() {
       setProfile(p);
       setStats(s);
       setPreferences(pref);
-      setAppearance(ProfileService.getAppearance());
       setNotifications(n);
       setPrivacy(priv);
     } catch (error) {
@@ -42,10 +39,9 @@ export function useProfile() {
   }, []);
 
   useEffect(() => {
-    loadData();
-    const unsubscribe = ProfileService.subscribe(() => {
-      loadData();
-    });
+    // Ensure initialized before reading data
+    ProfileService.initialize().then(loadData).catch(console.warn);
+    const unsubscribe = ProfileService.subscribe(loadData);
     return unsubscribe;
   }, [loadData]);
 
@@ -53,12 +49,12 @@ export function useProfile() {
     return await ProfileService.updateProfile(updates);
   }, []);
 
-  const updatePreferences = useCallback(async (updates: Partial<BibleStudyPreferences>) => {
-    return await ProfileService.updatePreferences(updates);
+  const updateAvatarUri = useCallback(async (uri: string | undefined) => {
+    return await ProfileService.updateAvatarUri(uri);
   }, []);
 
-  const updateAppearance = useCallback(async (theme: AppearanceTheme) => {
-    return await ProfileService.updateAppearance(theme);
+  const updatePreferences = useCallback(async (updates: Partial<BibleStudyPreferences>) => {
+    return await ProfileService.updatePreferences(updates);
   }, []);
 
   const updateNotifications = useCallback(
@@ -96,14 +92,13 @@ export function useProfile() {
     profile,
     stats,
     preferences,
-    appearance,
     notifications,
     privacy,
     loading,
     refreshStats,
     updateProfile,
+    updateAvatarUri,
     updatePreferences,
-    updateAppearance,
     updateNotifications,
     updatePrivacy,
     changePassword,

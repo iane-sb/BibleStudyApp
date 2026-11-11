@@ -1,3 +1,5 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import {
   Pressable,
@@ -8,6 +10,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useProfile } from "@/hooks/use-profile";
+import { AVATAR_PRESETS } from "@/services/profile-service";
 
 const C = {
   background: "#10131D",
@@ -59,6 +64,9 @@ function SectionHeader({
 }
 
 export default function HomeScreen() {
+  const { profile } = useProfile();
+  const activePreset = AVATAR_PRESETS.find((p) => p.id === profile?.avatarPreset);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar barStyle="light-content" />
@@ -81,7 +89,23 @@ export default function HomeScreen() {
             style={styles.avatar}
             onPress={() => router.push("/profile")}
           >
-            <Text style={styles.avatarText}>U</Text>
+            {profile?.avatarUrl ? (
+              <Image
+                source={{ uri: profile.avatarUrl }}
+                style={styles.avatarImg}
+                contentFit="cover"
+              />
+            ) : activePreset ? (
+              <Ionicons
+                name={activePreset.icon as any}
+                size={22}
+                color={activePreset.iconColor}
+              />
+            ) : (
+              <Text style={styles.avatarText}>
+                {profile?.name ? profile.name[0].toUpperCase() : "U"}
+              </Text>
+            )}
           </Pressable>
         </View>
 
@@ -281,6 +305,12 @@ const styles = StyleSheet.create({
     borderColor: C.goldDark,
     justifyContent: "center",
     alignItems: "center",
+    overflow: "hidden",
+  },
+  avatarImg: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
   },
   avatarText: {
     color: C.gold,
