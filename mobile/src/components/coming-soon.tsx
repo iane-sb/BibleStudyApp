@@ -1,8 +1,7 @@
-
-import { StyleSheet, Text, View } from 'react-native';
+import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const GOLD = '#D8B56D';
+import { useAppTheme } from '@/contexts/ThemeContext';
 
 type Props = {
   title: string;
@@ -10,13 +9,18 @@ type Props = {
 };
 
 export default function ComingSoon({ title, subtitle }: Props) {
+  const { colors } = useAppTheme();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <StatusBar barStyle={colors.statusBar} />
       <View style={styles.content}>
-        <Text style={styles.symbol}>✦</Text>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        <Text style={styles.label}>COMING SOON</Text>
+        <Text style={[styles.symbol, { color: colors.gold }]}>✦</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{subtitle}</Text>
+        <View style={[styles.badge, { backgroundColor: colors.goldMuted, borderColor: `${colors.gold}55` }]}>
+          <Text style={[styles.label, { color: colors.gold }]}>COMING SOON</Text>
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -25,7 +29,6 @@ export default function ComingSoon({ title, subtitle }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#10131D',
   },
   content: {
     flex: 1,
@@ -35,26 +38,29 @@ const styles = StyleSheet.create({
   },
   symbol: {
     fontSize: 48,
-    color: GOLD,
     marginBottom: 20,
   },
   title: {
     fontSize: 27,
     fontWeight: '700',
-    color: '#F5F0E6',
+    textAlign: 'center',
   },
   subtitle: {
-    color: '#9296A3',
     fontSize: 14,
     textAlign: 'center',
     marginTop: 10,
     lineHeight: 22,
   },
-  label: {
-    color: GOLD,
-    fontSize: 10,
-    letterSpacing: 3,
+  badge: {
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
     marginTop: 28,
+  },
+  label: {
+    fontSize: 10,
+    letterSpacing: 2.5,
     fontWeight: '700',
   },
 });

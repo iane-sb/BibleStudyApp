@@ -1,6 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import {
   Pressable,
   ScrollView,
@@ -11,20 +12,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { AppPalette, useAppTheme } from "@/contexts/ThemeContext";
 import { useProfile } from "@/hooks/use-profile";
 import { AVATAR_PRESETS } from "@/services/profile-service";
-
-const C = {
-  background: "#10131D",
-  card: "#191E2B",
-  cardLight: "#202637",
-  gold: "#D8B56D",
-  goldDark: "#A88B50",
-  white: "#F5F0E6",
-  muted: "#9296A3",
-  border: "#2A3040",
-  green: "#8BB89B",
-};
 
 const today = new Date();
 
@@ -46,17 +36,19 @@ function SectionHeader({
   title,
   action,
   onPress,
+  colors,
 }: {
   title: string;
   action?: string;
   onPress?: () => void;
+  colors: AppPalette;
 }) {
   return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={stylesStatic.sectionHeader}>
+      <Text style={[stylesStatic.sectionTitle, { color: colors.textPrimary }]}>{title}</Text>
       {action && (
         <Pressable onPress={onPress}>
-          <Text style={styles.sectionAction}>{action}</Text>
+          <Text style={[stylesStatic.sectionAction, { color: colors.gold }]}>{action}</Text>
         </Pressable>
       )}
     </View>
@@ -64,12 +56,15 @@ function SectionHeader({
 }
 
 export default function HomeScreen() {
+  const { colors, isDark } = useAppTheme();
   const { profile } = useProfile();
   const activePreset = AVATAR_PRESETS.find((p) => p.id === profile?.avatarPreset);
 
+  const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={colors.statusBar} />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -88,6 +83,7 @@ export default function HomeScreen() {
           <Pressable
             style={styles.avatar}
             onPress={() => router.push("/profile")}
+            accessibilityLabel="View profile"
           >
             {profile?.avatarUrl ? (
               <Image
@@ -135,8 +131,8 @@ export default function HomeScreen() {
               style={styles.readButton}
               onPress={() =>
                 router.push({
-                  pathname: '/bible',
-                  params: { book: 'JHN', chapter: '15', translation: 'KJV' },
+                  pathname: "/bible",
+                  params: { book: "JHN", chapter: "15", translation: "KJV" },
                 } as any)
               }
             >
@@ -149,10 +145,11 @@ export default function HomeScreen() {
         <SectionHeader
           title="Continue Reading"
           action="Open Bible  →"
+          colors={colors}
           onPress={() =>
             router.push({
-              pathname: '/bible',
-              params: { book: 'JHN', chapter: '1' },
+              pathname: "/bible",
+              params: { book: "JHN", chapter: "1" },
             } as any)
           }
         />
@@ -161,8 +158,8 @@ export default function HomeScreen() {
           style={styles.readingCard}
           onPress={() =>
             router.push({
-              pathname: '/bible',
-              params: { book: 'JHN', chapter: '1' },
+              pathname: "/bible",
+              params: { book: "JHN", chapter: "1" },
             } as any)
           }
         >
@@ -184,7 +181,7 @@ export default function HomeScreen() {
         </Pressable>
 
         {/* DAILY PROGRESS */}
-        <SectionHeader title="Your Daily Journey" />
+        <SectionHeader title="Your Daily Journey" colors={colors} />
 
         <View style={styles.progressCard}>
           <View style={styles.progressHeader}>
@@ -210,7 +207,7 @@ export default function HomeScreen() {
         </View>
 
         {/* QUICK ACCESS */}
-        <SectionHeader title="Explore Your Faith" />
+        <SectionHeader title="Explore Your Faith" colors={colors} />
 
         <View style={styles.actionGrid}>
           <Pressable
@@ -263,133 +260,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: C.background,
-  },
-  scrollContent: {
-    paddingHorizontal: 22,
-    paddingTop: 12,
-    paddingBottom: 30,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 25,
-  },
-  brand: {
-    color: C.gold,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 3,
-    marginBottom: 13,
-  },
-  greeting: {
-    color: C.white,
-    fontSize: 25,
-    fontWeight: "700",
-  },
-  headerSubtitle: {
-    color: C.muted,
-    fontSize: 13,
-    marginTop: 6,
-  },
-  avatar: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: C.cardLight,
-    borderWidth: 1,
-    borderColor: C.goldDark,
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-  },
-  avatarImg: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-  },
-  avatarText: {
-    color: C.gold,
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  verseCard: {
-    backgroundColor: "#20283A",
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: "#41404A",
-    padding: 21,
-    marginBottom: 30,
-    overflow: "hidden",
-  },
-  verseTop: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  verseEyebrow: {
-    color: C.gold,
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1.4,
-  },
-  verseDate: {
-    color: C.muted,
-    fontSize: 10,
-  },
-  quoteMark: {
-    color: C.gold,
-    fontSize: 55,
-    lineHeight: 65,
-    marginTop: 12,
-    fontWeight: "700",
-  },
-  verseText: {
-    color: C.white,
-    fontSize: 21,
-    lineHeight: 33,
-    fontWeight: "500",
-    marginBottom: 19,
-  },
-  verseReference: {
-    color: C.gold,
-    fontSize: 11,
-    letterSpacing: 1.8,
-    fontWeight: "800",
-  },
-  verseDivider: {
-    height: 1,
-    backgroundColor: "#454B58",
-    marginVertical: 19,
-  },
-  verseFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  verseFooterText: {
-    color: "#B9BDCA",
-    fontSize: 11,
-  },
-  readButton: {
-    backgroundColor: C.gold,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
-  readButtonText: {
-    color: "#171923",
-    fontWeight: "800",
-    fontSize: 11,
-  },
+const stylesStatic = StyleSheet.create({
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -398,175 +269,304 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   sectionTitle: {
-    color: C.white,
     fontSize: 17,
     fontWeight: "700",
   },
   sectionAction: {
-    color: C.gold,
     fontSize: 11,
     fontWeight: "600",
   },
-  readingCard: {
-    backgroundColor: C.card,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 15,
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 27,
-    gap: 13,
-  },
-  readingIcon: {
-    width: 47,
-    height: 55,
-    borderRadius: 12,
-    backgroundColor: "#303344",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  readingIconText: {
-    color: C.gold,
-    fontSize: 24,
-  },
-  readingInfo: {
-    flex: 1,
-  },
-  readingLabel: {
-    color: C.gold,
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 1.3,
-  },
-  readingTitle: {
-    color: C.white,
-    fontSize: 15,
-    fontWeight: "700",
-    marginTop: 5,
-  },
-  readingSubtitle: {
-    color: C.muted,
-    fontSize: 11,
-    marginTop: 3,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: "#343A49",
-    borderRadius: 5,
-    marginTop: 11,
-  },
-  progressFill: {
-    height: 4,
-    width: "35%",
-    backgroundColor: C.gold,
-    borderRadius: 5,
-  },
-  progressText: {
-    color: C.muted,
-    fontSize: 9,
-    marginTop: 5,
-  },
-  chevron: {
-    color: C.gold,
-    fontSize: 27,
-  },
-  progressCard: {
-    backgroundColor: C.card,
-    borderRadius: 17,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 17,
-    marginBottom: 28,
-  },
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  progressCardTitle: {
-    color: C.white,
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  progressCardSubtitle: {
-    color: C.muted,
-    fontSize: 11,
-    marginTop: 5,
-  },
-  progressPercent: {
-    color: C.gold,
-    fontSize: 22,
-    fontWeight: "800",
-  },
-  dailyTrack: {
-    height: 7,
-    backgroundColor: "#343A49",
-    borderRadius: 6,
-    marginTop: 17,
-  },
-  dailyFill: {
-    height: 7,
-    width: "33.33%",
-    backgroundColor: C.green,
-    borderRadius: 6,
-  },
-  dailyFootnote: {
-    color: C.muted,
-    fontSize: 10,
-    marginTop: 9,
-  },
-  actionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    gap: 12,
-  },
-  actionCard: {
-    width: "48%",
-    minHeight: 116,
-    backgroundColor: C.card,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: C.border,
-    padding: 15,
-    justifyContent: "center",
-  },
-  actionIcon: {
-    color: C.gold,
-    fontSize: 24,
-    marginBottom: 9,
-  },
-  actionTitle: {
-    color: C.white,
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  actionSubtitle: {
-    color: C.muted,
-    fontSize: 10,
-    marginTop: 5,
-  },
-  footer: {
-    alignItems: "center",
-    marginTop: 32,
-    paddingVertical: 15,
-  },
-  footerSymbol: {
-    color: C.gold,
-    fontSize: 19,
-    marginBottom: 9,
-  },
-  footerText: {
-    color: C.muted,
-    fontSize: 12,
-    fontStyle: "italic",
-  },
-  footerReference: {
-    color: C.goldDark,
-    fontSize: 9,
-    letterSpacing: 2,
-    marginTop: 8,
-    fontWeight: "700",
-  },
 });
+
+function createStyles(C: AppPalette, isDark: boolean) {
+  return StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: C.background,
+    },
+    scrollContent: {
+      paddingHorizontal: 22,
+      paddingTop: 12,
+      paddingBottom: 30,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 25,
+    },
+    brand: {
+      color: C.gold,
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 3,
+      marginBottom: 13,
+    },
+    greeting: {
+      color: C.textPrimary,
+      fontSize: 25,
+      fontWeight: "700",
+    },
+    headerSubtitle: {
+      color: C.textSecondary,
+      fontSize: 13,
+      marginTop: 6,
+    },
+    avatar: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: C.cardSecondary,
+      borderWidth: 1,
+      borderColor: C.goldDark,
+      justifyContent: "center",
+      alignItems: "center",
+      overflow: "hidden",
+    },
+    avatarImg: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+    },
+    avatarText: {
+      color: C.gold,
+      fontSize: 17,
+      fontWeight: "700",
+    },
+    verseCard: {
+      backgroundColor: C.verseCardBg,
+      borderRadius: 22,
+      borderWidth: 1,
+      borderColor: C.verseCardBorder,
+      padding: 21,
+      marginBottom: 30,
+      overflow: "hidden",
+    },
+    verseTop: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    verseEyebrow: {
+      color: C.gold,
+      fontSize: 10,
+      fontWeight: "800",
+      letterSpacing: 1.4,
+    },
+    verseDate: {
+      color: C.textSecondary,
+      fontSize: 10,
+    },
+    quoteMark: {
+      color: C.gold,
+      fontSize: 55,
+      lineHeight: 65,
+      marginTop: 12,
+      fontWeight: "700",
+    },
+    verseText: {
+      color: C.textPrimary,
+      fontSize: 21,
+      lineHeight: 33,
+      fontWeight: "500",
+      marginBottom: 19,
+    },
+    verseReference: {
+      color: C.gold,
+      fontSize: 11,
+      letterSpacing: 1.8,
+      fontWeight: "800",
+    },
+    verseDivider: {
+      height: 1,
+      backgroundColor: C.verseDivider,
+      marginVertical: 19,
+    },
+    verseFooter: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 12,
+    },
+    verseFooterText: {
+      color: C.verseFooterText,
+      fontSize: 11,
+    },
+    readButton: {
+      backgroundColor: C.readBtnBg,
+      paddingHorizontal: 15,
+      paddingVertical: 10,
+      borderRadius: 10,
+    },
+    readButtonText: {
+      color: C.readBtnText,
+      fontWeight: "800",
+      fontSize: 11,
+    },
+    readingCard: {
+      backgroundColor: C.card,
+      borderRadius: 17,
+      borderWidth: 1,
+      borderColor: C.border,
+      padding: 15,
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 27,
+      gap: 13,
+    },
+    readingIcon: {
+      width: 47,
+      height: 55,
+      borderRadius: 12,
+      backgroundColor: C.readingIconBg,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    readingIconText: {
+      color: C.gold,
+      fontSize: 24,
+    },
+    readingInfo: {
+      flex: 1,
+    },
+    readingLabel: {
+      color: C.gold,
+      fontSize: 9,
+      fontWeight: "800",
+      letterSpacing: 1.3,
+    },
+    readingTitle: {
+      color: C.textPrimary,
+      fontSize: 15,
+      fontWeight: "700",
+      marginTop: 5,
+    },
+    readingSubtitle: {
+      color: C.textSecondary,
+      fontSize: 11,
+      marginTop: 3,
+    },
+    progressTrack: {
+      height: 4,
+      backgroundColor: C.progressTrack,
+      borderRadius: 5,
+      marginTop: 11,
+    },
+    progressFill: {
+      height: 4,
+      width: "35%",
+      backgroundColor: C.gold,
+      borderRadius: 5,
+    },
+    progressText: {
+      color: C.textSecondary,
+      fontSize: 9,
+      marginTop: 5,
+    },
+    chevron: {
+      color: C.gold,
+      fontSize: 27,
+    },
+    progressCard: {
+      backgroundColor: C.card,
+      borderRadius: 17,
+      borderWidth: 1,
+      borderColor: C.border,
+      padding: 17,
+      marginBottom: 28,
+    },
+    progressHeader: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    progressCardTitle: {
+      color: C.textPrimary,
+      fontSize: 14,
+      fontWeight: "700",
+    },
+    progressCardSubtitle: {
+      color: C.textSecondary,
+      fontSize: 11,
+      marginTop: 5,
+    },
+    progressPercent: {
+      color: C.gold,
+      fontSize: 22,
+      fontWeight: "800",
+    },
+    dailyTrack: {
+      height: 7,
+      backgroundColor: C.progressTrack,
+      borderRadius: 6,
+      marginTop: 17,
+    },
+    dailyFill: {
+      height: 7,
+      width: "33.33%",
+      backgroundColor: C.success,
+      borderRadius: 6,
+    },
+    dailyFootnote: {
+      color: C.textSecondary,
+      fontSize: 10,
+      marginTop: 9,
+    },
+    actionGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      gap: 12,
+    },
+    actionCard: {
+      width: "48%",
+      minHeight: 116,
+      backgroundColor: C.card,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: C.border,
+      padding: 15,
+      justifyContent: "center",
+    },
+    actionIcon: {
+      color: C.gold,
+      fontSize: 24,
+      marginBottom: 9,
+    },
+    actionTitle: {
+      color: C.textPrimary,
+      fontSize: 13,
+      fontWeight: "700",
+    },
+    actionSubtitle: {
+      color: C.textSecondary,
+      fontSize: 10,
+      marginTop: 5,
+    },
+    footer: {
+      alignItems: "center",
+      marginTop: 32,
+      paddingVertical: 15,
+    },
+    footerSymbol: {
+      color: C.gold,
+      fontSize: 19,
+      marginBottom: 9,
+    },
+    footerText: {
+      color: C.textSecondary,
+      fontSize: 12,
+      fontStyle: "italic",
+    },
+    footerReference: {
+      color: C.goldDark,
+      fontSize: 9,
+      letterSpacing: 2,
+      marginTop: 8,
+      fontWeight: "700",
+    },
+  });
+}

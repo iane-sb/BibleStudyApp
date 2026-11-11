@@ -37,17 +37,7 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  cardLight: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-};
+import { AppPalette, useAppTheme } from '@/contexts/ThemeContext';
 
 const SCREEN = Dimensions.get('window');
 const CROP_SIZE = Math.min(SCREEN.width - 48, 300); // square crop frame size in dp
@@ -73,6 +63,9 @@ export function PhotoCropModal({
   onCancel,
   onSave,
 }: PhotoCropModalProps) {
+  const { colors: COLORS } = useAppTheme();
+  const styles = useMemo(() => createStyles(COLORS), [COLORS]);
+
   // ─── Gesture State ─────────────────────────────────────────────────────────
   const translateX = useRef(0);
   const translateY = useRef(0);
@@ -410,7 +403,8 @@ export function PhotoCropModal({
 const CORNER_SIZE = 20;
 const CORNER_WIDTH = 3;
 
-const styles = StyleSheet.create({
+function createStyles(COLORS: AppPalette) {
+  return StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(5, 7, 12, 0.92)',
@@ -596,4 +590,5 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#10131D',
   },
-});
+  });
+}

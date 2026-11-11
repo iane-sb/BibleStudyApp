@@ -15,22 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BibleService, TRANSLATIONS } from '@/services/bible-service';
 import { ProfileService } from '@/services/profile-service';
 import { BibleBook, Testament, TranslationCode } from '@/types/bible';
-
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  cardSecondary: '#202637',
-  gold: '#D8B56D',
-  goldDark: '#A88B50',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-  activeTab: '#262D3D',
-  success: '#8BB89B',
-};
+import { AppPalette, useAppTheme } from '@/contexts/ThemeContext';
 
 export default function BibleScreen() {
+  const { colors: COLORS } = useAppTheme();
+  const styles = useMemo(() => createStyles(COLORS), [COLORS]);
+
   const params = useLocalSearchParams<{
     book?: string;
     chapter?: string;
@@ -204,7 +194,7 @@ export default function BibleScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <StatusBar barStyle="light-content" />
+      <StatusBar barStyle={COLORS.statusBar} />
 
       {/* TOP HEADER CONTROLS */}
       <View style={styles.header}>
@@ -616,7 +606,8 @@ export default function BibleScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(COLORS: AppPalette) {
+  return StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
@@ -1088,4 +1079,5 @@ const styles = StyleSheet.create({
     color: COLORS.background,
     fontWeight: '700',
   },
-});
+  });
+}

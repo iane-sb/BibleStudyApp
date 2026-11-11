@@ -12,7 +12,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
   Platform,
@@ -23,20 +23,9 @@ import {
 } from 'react-native';
 
 import { PhotoCropModal } from '@/components/profile/PhotoCropModal';
-import { useAppTheme } from '@/contexts/ThemeContext';
+import { AppPalette, useAppTheme } from '@/contexts/ThemeContext';
 import { AVATAR_PRESETS } from '@/services/profile-service';
 import { UserProfile } from '@/types/profile';
-
-const COLORS = {
-  background: '#10131D',
-  card: '#191E2B',
-  gold: '#D8B56D',
-  goldMuted: 'rgba(216, 181, 109, 0.15)',
-  textPrimary: '#F5F0E6',
-  textSecondary: '#9296A3',
-  border: '#2A3040',
-  cardLight: '#202637',
-};
 
 interface ProfileHeaderProps {
   profile: UserProfile;
@@ -52,6 +41,7 @@ export function ProfileHeader({
   onAvatarChange,
 }: ProfileHeaderProps) {
   const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const activePreset = AVATAR_PRESETS.find((p) => p.id === profile.avatarPreset);
 
   const [cropSource, setCropSource] = useState<{
@@ -246,13 +236,14 @@ export function ProfileHeader({
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: AppPalette) {
+  return StyleSheet.create({
   container: {
-    backgroundColor: COLORS.card,
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     marginBottom: 20,
   },
   avatarRow: {
@@ -268,40 +259,40 @@ const styles = StyleSheet.create({
     height: 74,
     borderRadius: 37,
     borderWidth: 2,
-    borderColor: COLORS.gold,
+    borderColor: colors.gold,
   },
   avatarFallback: {
     width: 74,
     height: 74,
     borderRadius: 37,
     borderWidth: 2,
-    borderColor: COLORS.gold,
+    borderColor: colors.gold,
     alignItems: 'center',
     justifyContent: 'center',
   },
   initialsText: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.gold,
+    color: colors.gold,
   },
   cameraBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: COLORS.gold,
+    backgroundColor: colors.gold,
     width: 26,
     height: 26,
     borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: COLORS.card,
+    borderColor: colors.card,
   },
   uploadingDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10131D',
+    backgroundColor: colors.background,
   },
   headerInfo: {
     flex: 1,
@@ -309,12 +300,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 20,
     fontWeight: '700',
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
     letterSpacing: 0.2,
   },
   userEmail: {
     fontSize: 13,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     marginTop: 2,
   },
   badgeRow: {
@@ -327,53 +318,53 @@ const styles = StyleSheet.create({
   premiumBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLORS.goldMuted,
+    backgroundColor: colors.goldMuted,
     paddingHorizontal: 9,
     paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(216, 181, 109, 0.35)',
+    borderColor: `${colors.gold}55`,
     gap: 5,
   },
   premiumBadgeText: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
+    color: colors.gold,
     letterSpacing: 0.8,
   },
   freeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#202637',
+    backgroundColor: colors.cardSecondary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
     gap: 6,
   },
   freeBadgeText: {
     fontSize: 10,
     fontWeight: '600',
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     letterSpacing: 0.6,
   },
   upgradeLink: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
+    color: colors.gold,
   },
   memberSince: {
     fontSize: 11,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
   verseCard: {
-    backgroundColor: COLORS.cardLight,
+    backgroundColor: colors.cardSecondary,
     borderRadius: 12,
     padding: 12,
     marginTop: 14,
     borderLeftWidth: 3,
-    borderLeftColor: COLORS.gold,
+    borderLeftColor: colors.gold,
   },
   verseHeader: {
     flexDirection: 'row',
@@ -384,18 +375,18 @@ const styles = StyleSheet.create({
   verseLabel: {
     fontSize: 10,
     fontWeight: '700',
-    color: COLORS.gold,
+    color: colors.gold,
     letterSpacing: 0.8,
   },
   verseText: {
     fontSize: 13,
     fontStyle: 'italic',
-    color: COLORS.textPrimary,
+    color: colors.textPrimary,
     lineHeight: 18,
   },
   bioText: {
     fontSize: 12,
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
     marginTop: 4,
     lineHeight: 16,
   },
@@ -414,23 +405,24 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   editBtn: {
-    backgroundColor: 'rgba(216, 181, 109, 0.08)',
+    backgroundColor: colors.goldMuted,
     borderWidth: 1,
-    borderColor: 'rgba(216, 181, 109, 0.4)',
+    borderColor: `${colors.gold}66`,
   },
   editBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.gold,
+    color: colors.gold,
   },
   photoBtn: {
-    backgroundColor: COLORS.cardLight,
+    backgroundColor: colors.cardSecondary,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    borderColor: colors.border,
   },
   photoBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: COLORS.textSecondary,
+    color: colors.textSecondary,
   },
-});
+  });
+}

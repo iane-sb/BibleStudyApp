@@ -4,9 +4,6 @@
  * Provides application-wide Dark / Light / System theme selection
  * with SecureStore persistence. Any screen can call useAppTheme()
  * to get the current resolved colors and toggle the preference.
- *
- * Future Laravel integration: sync theme preference via
- *   PATCH /api/v1/user/preferences { appearance: 'dark'|'light'|'system' }
  */
 
 import * as SecureStore from 'expo-secure-store';
@@ -29,6 +26,7 @@ export interface AppPalette {
   background: string;
   card: string;
   cardSecondary: string;
+  cardLight: string;
   gold: string;
   goldDark: string;
   goldMuted: string;
@@ -44,12 +42,22 @@ export interface AppPalette {
   blue: string;
   purple: string;
   statusBar: 'light-content' | 'dark-content';
+  activeTab: string;
+  verseCardBg: string;
+  verseCardBorder: string;
+  verseDivider: string;
+  verseFooterText: string;
+  readBtnBg: string;
+  readBtnText: string;
+  progressTrack: string;
+  readingIconBg: string;
 }
 
 export const DarkPalette: AppPalette = {
   background: '#10131D',
   card: '#191E2B',
   cardSecondary: '#202637',
+  cardLight: '#202637',
   gold: '#D8B56D',
   goldDark: '#A88B50',
   goldMuted: 'rgba(216, 181, 109, 0.15)',
@@ -57,7 +65,7 @@ export const DarkPalette: AppPalette = {
   textSecondary: '#9296A3',
   textMuted: '#656A7A',
   border: '#2A3040',
-  borderMuted: 'rgba(255, 255, 255, 0.04)',
+  borderMuted: 'rgba(255, 255, 255, 0.05)',
   danger: '#EF4444',
   dangerMuted: 'rgba(239, 68, 68, 0.12)',
   success: '#8BB89B',
@@ -65,12 +73,22 @@ export const DarkPalette: AppPalette = {
   blue: '#60A5FA',
   purple: '#C084FC',
   statusBar: 'light-content',
+  activeTab: '#262D3D',
+  verseCardBg: '#20283A',
+  verseCardBorder: '#41404A',
+  verseDivider: '#454B58',
+  verseFooterText: '#B9BDCA',
+  readBtnBg: '#D8B56D',
+  readBtnText: '#171923',
+  progressTrack: '#343A49',
+  readingIconBg: '#303344',
 };
 
 export const LightPalette: AppPalette = {
   background: '#F7F7FA',
   card: '#FFFFFF',
   cardSecondary: '#F0F1F7',
+  cardLight: '#F0F1F7',
   gold: '#9A7130',
   goldDark: '#7A5920',
   goldMuted: 'rgba(154, 113, 48, 0.12)',
@@ -78,7 +96,7 @@ export const LightPalette: AppPalette = {
   textSecondary: '#73798A',
   textMuted: '#A0A5B4',
   border: '#E7E8EE',
-  borderMuted: 'rgba(0, 0, 0, 0.05)',
+  borderMuted: 'rgba(0, 0, 0, 0.06)',
   danger: '#DC2626',
   dangerMuted: 'rgba(220, 38, 38, 0.1)',
   success: '#16A34A',
@@ -86,18 +104,23 @@ export const LightPalette: AppPalette = {
   blue: '#2563EB',
   purple: '#9333EA',
   statusBar: 'dark-content',
+  activeTab: '#E8E9F2',
+  verseCardBg: '#FFFFFF',
+  verseCardBorder: '#E2E4ED',
+  verseDivider: '#EDEFE8',
+  verseFooterText: '#73798A',
+  readBtnBg: '#9A7130',
+  readBtnText: '#FFFFFF',
+  progressTrack: '#E3E5ED',
+  readingIconBg: '#EAECEF',
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 interface ThemeContextValue {
-  /** The user-selected preference ('dark' | 'light' | 'system') */
   themePreference: AppearanceTheme;
-  /** The resolved color palette (never 'system') */
   colors: AppPalette;
-  /** Whether the resolved theme is dark */
   isDark: boolean;
-  /** Change the app-wide theme and persist it */
   setTheme: (theme: AppearanceTheme) => Promise<void>;
 }
 
@@ -133,7 +156,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
           setPreference(saved);
         }
       } catch {
-        // If SecureStore fails, fall back to default 'dark'
+        // Fall back to default 'dark'
       } finally {
         setHydrated(true);
       }
@@ -151,7 +174,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         await SecureStore.setItemAsync(STORAGE_KEY, theme);
       }
     } catch {
-      // Non-critical — the in-memory change already applied
+      // Non-critical
     }
   }, []);
 
@@ -170,7 +193,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [preference, colors, isDark, setTheme]
   );
 
-  // Don't render until we've read storage, to avoid flash
   if (!hydrated) return null;
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
