@@ -83,4 +83,7 @@ export const STORAGE_KEYS = {
   PRIVACY: 'privacy_v1',
   APPEARANCE: 'appearance_v1',
   AVATAR_URI: 'avatar_uri_v1',
+  DAILY_VERSE: 'daily_verse_v1',
+  DAILY_VERSE_HISTORY: 'daily_verse_history_v1',
+  BOOKMARKED_VERSES: 'bookmarked_verses_v1',
 } as const;

@@ -3,8 +3,12 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useMemo } from "react";
 import {
+  Alert,
+  Animated,
+  Platform,
   Pressable,
   ScrollView,
+  Share,
   StatusBar,
   StyleSheet,
   Text,
@@ -13,16 +17,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppPalette, useAppTheme } from "@/contexts/ThemeContext";
+import { useDailyVerse } from "@/hooks/use-daily-verse";
 import { useProfile } from "@/hooks/use-profile";
 import { AVATAR_PRESETS } from "@/services/profile-service";
 
 const today = new Date();
-
-const dateLabel = today.toLocaleDateString("en-US", {
-  weekday: "long",
-  month: "long",
-  day: "numeric",
-});
 
 function getGreeting() {
   const hour = today.getHours();
@@ -61,6 +60,45 @@ export default function HomeScreen() {
   const activePreset = AVATAR_PRESETS.find((p) => p.id === profile?.avatarPreset);
 
   const styles = useMemo(() => createStyles(colors, isDark), [colors, isDark]);
+
+  // ─── Daily Verse Hook ───────────────────────────────────────────────────────
+  const {
+    verse,
+    isBookmarked,
+    loading: verseLoading,
+    fadeAnim,
+    toggleBookmark,
+    simulateNextVerse,
+  } = useDailyVerse();
+
+  const handleShareVerse = async () => {
+    if (!verse) return;
+    try {
+      await Share.share({
+        message: `"${verse.text}"\n\n— ${verse.reference} · ${verse.translation}\n\nShared from Word & Wisdom`,
+      });
+    } catch {
+      // user dismissed share sheet
+    }
+  };
+
+  const handleSimulateRotate = () => {
+    Alert.alert(
+      "🔧 Dev Tool",
+      "Simulate the 6:00 AM verse rotation to test the daily verse transition?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Rotate Now", onPress: () => simulateNextVerse() },
+      ]
+    );
+  };
+
+  // Format date label fresh on each render (supports timezone changes)
+  const dateLabel = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -106,40 +144,86 @@ export default function HomeScreen() {
         </View>
 
         {/* DAILY VERSE */}
-        <View style={styles.verseCard}>
+        <Animated.View style={[styles.verseCard, { opacity: fadeAnim }]}>
           <View style={styles.verseTop}>
             <Text style={styles.verseEyebrow}>✦ VERSE OF THE DAY</Text>
-            <Text style={styles.verseDate}>{dateLabel}</Text>
+            <View style={styles.verseTopRight}>
+              <Text style={styles.verseDate}>{dateLabel}</Text>
+              {__DEV__ && (
+                <Pressable
+                  onPress={handleSimulateRotate}
+                  style={styles.devBtn}
+                  accessibilityLabel="Simulate verse rotation"
+                >
+                  <Ionicons name="refresh-circle-outline" size={16} color={colors.textSecondary} />
+                </Pressable>
+              )}
+            </View>
           </View>
 
           <Text style={styles.quoteMark}>“</Text>
 
-          <Text style={styles.verseText}>
-            I am the vine, ye are the branches: He that
-            abideth in me, and I in him, the same bringeth
-            forth much fruit.
-          </Text>
-
-          <Text style={styles.verseReference}>JOHN 15:5 · KJV</Text>
+          {verseLoading || !verse ? (
+            <Text style={styles.verseText}>Loading today’s verse…</Text>
+          ) : (
+            <>
+              <Text style={styles.verseText}>{verse.text}</Text>
+              <Text style={styles.verseReference}>
+                {verse.reference.toUpperCase()} · {verse.translation}
+              </Text>
+              {verse.themeLabel ? (
+                <Text style={styles.verseThemeTag}>✦ {verse.themeLabel.toUpperCase()}</Text>
+              ) : null}
+            </>
+          )}
 
           <View style={styles.verseDivider} />
 
           <View style={styles.verseFooter}>
-            <Text style={styles.verseFooterText}>A moment in His Word</Text>
+            <View style={styles.verseActions}>
+              <Pressable
+                style={styles.verseActionBtn}
+                onPress={toggleBookmark}
+                accessibilityLabel={isBookmarked ? "Remove bookmark" : "Bookmark verse"}
+              >
+                <Ionicons
+                  name={isBookmarked ? "bookmark" : "bookmark-outline"}
+                  size={18}
+                  color={isBookmarked ? colors.gold : colors.textSecondary}
+                />
+              </Pressable>
+              <Pressable
+                style={styles.verseActionBtn}
+                onPress={handleShareVerse}
+                accessibilityLabel="Share verse"
+              >
+                <Ionicons
+                  name="share-social-outline"
+                  size={18}
+                  color={colors.textSecondary}
+                />
+              </Pressable>
+            </View>
 
             <Pressable
               style={styles.readButton}
               onPress={() =>
-                router.push({
-                  pathname: "/bible",
-                  params: { book: "JHN", chapter: "15", translation: "KJV" },
-                } as any)
+                verse
+                  ? router.push({
+                      pathname: "/bible",
+                      params: {
+                        book: verse.bookCode,
+                        chapter: String(verse.chapter),
+                        translation: verse.translation,
+                      },
+                    } as any)
+                  : router.push({ pathname: "/bible" } as any)
               }
             >
-              <Text style={styles.readButtonText}>Read Bible →</Text>
+              <Text style={styles.readButtonText}>Read in Bible →</Text>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
 
         {/* CONTINUE READING */}
         <SectionHeader
@@ -358,6 +442,31 @@ function createStyles(C: AppPalette, isDark: boolean) {
     verseDate: {
       color: C.textSecondary,
       fontSize: 10,
+    },
+    verseTopRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 6,
+    },
+    verseThemeTag: {
+      color: C.textSecondary,
+      fontSize: 9,
+      fontWeight: "700",
+      letterSpacing: 1.2,
+      marginTop: 6,
+    },
+    verseActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    verseActionBtn: {
+      padding: 7,
+      borderRadius: 8,
+    },
+    devBtn: {
+      padding: 2,
+      opacity: 0.5,
     },
     quoteMark: {
       color: C.gold,

@@ -4,12 +4,14 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { ThemeProvider, useAppTheme } from '@/contexts/ThemeContext';
+import { DailyVerseService } from '@/services/daily-verse-service';
 import { ProfileService } from '@/services/profile-service';
 
 SplashScreen.preventAutoHideAsync();
 
-// Initialize profile and settings persistence on app launch
+// Initialize profile, settings, and daily verse rotation on app launch
 ProfileService.initialize().catch(console.warn);
+DailyVerseService.initialize().catch(console.warn);
 
 function NavigationWrapper() {
   const { isDark } = useAppTheme();
